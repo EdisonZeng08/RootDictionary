@@ -1,0 +1,2749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="description" content="零依赖的英语背词工具：自己录入词库，给单词打医/药词根标签，按词根分组，背诵与测验（选项优先取同一词根的词）。数据只存在本机浏览器，不联网不上传。">
+<meta name="keywords" content="英语单词, 词根, 医学词根, 药学词根, 背单词, 词汇测验, vocabulary, word roots">
+<meta name="author" content="english-vocab">
+<meta name="theme-color" content="#3ecf8e">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:title" content="英语单词本 · 词根版">
+<meta property="og:description" content="自己录入的英语词库：医/药词根标签、按词根分组、背诵与同词根测验。">
+<meta property="og:image" content="favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="英语单词本 · 词根版">
+<meta name="twitter:description" content="自己录入的英语词库：医/药词根标签、按词根分组、背诵与同词根测验。">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>英语单词本 · 词根 · 分组 · 背诵 · 测验</title>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg:#0f1116; --bg2:#151824; --card:#191d2a; --card2:#1f2434; --line:#2b3146;
+    --txt:#e9ecf5; --muted:#9aa3bd; --dim:#6f7896;
+    --pri:#3ecf8e; --pri-d:#2aa873; --acc:#7c9cff; --warn:#ffb454; --bad:#ff6b81;
+    --r:14px; --sh:0 10px 30px rgba(0,0,0,.35);
+  }
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 15% -10%, #1b2340 0%, transparent 60%),
+               radial-gradient(900px 600px at 100% 0%, #1d2b26 0%, transparent 55%),
+               var(--bg);
+    color:var(--txt); min-height:100vh;
+    font:15px/1.6 "Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{max-width:1080px;margin:0 auto;padding:18px 16px 70px}
+  /* ---------- 顶栏 ---------- */
+  header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:.3px}
+  .brand .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--pri),var(--acc));display:grid;place-items:center;font-size:12px;color:#08130d;font-weight:800}
+  .tabs{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:12px;border:1px solid var(--line)}
+  .tabs button{background:transparent;border:0;color:var(--muted);padding:8px 14px;border-radius:9px;cursor:pointer;font:inherit;font-weight:600;white-space:nowrap}
+  .tabs button:hover{color:var(--txt);background:#20263a}
+  .tabs button.on{background:linear-gradient(135deg,var(--pri),#37b7a4);color:#06170f}
+  .top .right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  /* ---------- 通用 ---------- */
+  .card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+  .card+.card{margin-top:14px}
+  h2{margin:0 0 4px;font-size:17px}
+  h3{margin:0 0 10px;font-size:14px;color:var(--muted);font-weight:600}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grow{flex:1 1 auto;min-width:0}
+  label.f{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight:600}
+  input[type=text],input[type=search],select,textarea{
+    width:100%;background:#111524;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:10px 12px;font:inherit;outline:none
+  }
+  textarea{resize:vertical;min-height:110px;line-height:1.7}
+  input:focus,select:focus,textarea:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(62,207,142,.13)}
+  select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+  button.btn,button.ghost,button.danger{font:inherit;font-weight:600;border-radius:10px;padding:9px 14px;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+  .btn{background:linear-gradient(135deg,var(--pri),#37b7a4);color:#06170f}
+  .btn:hover{filter:brightness(1.07)}
+  .btn.blue{background:linear-gradient(135deg,var(--acc),#5f7ce8);color:#0a1030}
+  .btn.warm{background:linear-gradient(135deg,var(--warn),#f09a3e);color:#2a1700}
+  .ghost{background:#1b2133;color:var(--txt);border-color:var(--line)}
+  .ghost:hover{background:#222a41}
+  .danger{background:transparent;color:var(--bad);border-color:#4a2a35}
+  .danger:hover{background:#2a1821}
+  button:disabled{opacity:.42;cursor:not-allowed;filter:none}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:#1b2133;border:1px solid var(--line);color:var(--txt);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}
+  .chip:hover{background:#232b42}
+  .chip.on{background:rgba(62,207,142,.16);border-color:var(--pri);color:#c9ffe4}
+  .chip .n{color:var(--dim);font-size:12px}
+  .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px;border-radius:999px;background:#212840;color:#c3cbe6;border:1px solid var(--line)}
+  .tag .sw{width:8px;height:8px;border-radius:50%}
+  .tag.root{background:rgba(124,156,255,.14);border-color:#33406b;color:#a9bbff}
+  .tag.root b{color:#dfe6ff;font-weight:700}
+  .hint{font-size:12.5px;color:var(--dim);line-height:1.7}
+  .kbd{display:inline-block;background:#20263a;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:0 6px;font-size:12px;color:#cdd5ea}
+  code{background:#1b2133;border:1px solid var(--line);border-radius:5px;padding:0 4px;font-size:12.5px}
+  .empty{text-align:center;color:var(--muted);padding:34px 12px;border:1px dashed var(--line);border-radius:12px}
+  .sep{height:1px;background:var(--line);margin:14px 0}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:10px;margin-bottom:14px}
+  .stat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0;overflow:hidden}
+  .stat b{display:block;font-size:20px;line-height:1.25}
+  .stat span{font-size:12px;color:var(--muted);white-space:nowrap}
+  /* ---------- 列表 ---------- */
+  .list{display:flex;flex-direction:column;gap:8px}
+  .item{display:flex;gap:12px;align-items:flex-start;background:#161b28;border:1px solid var(--line);border-radius:12px;padding:11px 13px}
+  .item.sel{border-color:var(--pri);background:rgba(62,207,142,.07)}
+  .item .main{flex:1 1 auto;min-width:0}
+  .item .en{font-weight:700;font-size:16px;color:#fff;word-break:break-word}
+  .item .zh{color:#d6dcef;margin-top:2px;word-break:break-word}
+  .item .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:7px}
+  .item .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .mini{font-size:12.5px;padding:5px 10px;border-radius:8px}
+  .dots{display:inline-flex;gap:3px;align-items:center}
+  .dots i{width:7px;height:7px;border-radius:50%;background:#333c57;display:block}
+  .dots i.f{background:var(--pri)}
+  .cb{width:18px;height:18px;flex:0 0 18px;margin-top:3px;border-radius:5px;border:1.5px solid #3b4566;background:#141a28;cursor:pointer;display:grid;place-items:center;color:transparent;font-size:12px}
+  .cb.on{background:var(--pri);border-color:var(--pri);color:#06170f}
+  /* 按词根分组 */
+  .rgroup{margin-bottom:14px}
+  .rhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;background:#1a2033;border:1px solid var(--line);border-radius:11px;cursor:pointer}
+  .rhead:hover{background:#1f2740}
+  .rhead .rk{font-weight:800;color:#dfe6ff;font-size:15px}
+  .rhead .rm{color:var(--muted);font-size:12.5px}
+  .rhead .rc{margin-left:auto;color:var(--dim);font-size:12px}
+  .rbody{margin-top:8px}
+  /* ---------- 学习 ---------- */
+  .flashwrap{margin:6px 0 12px}
+  .face{border-radius:16px;border:1px solid var(--line);background:linear-gradient(160deg,#1c2233,#161a26);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:26px 22px;text-align:center;cursor:pointer;min-height:300px;position:relative;animation:fadein .18s ease}
+  .face .f-label{position:absolute;top:12px;left:14px;font-size:11px;letter-spacing:1.4px;color:var(--dim);text-transform:uppercase}
+  .face .f-tip{position:absolute;bottom:10px;left:0;right:0;font-size:12px;color:var(--dim)}
+  .face.back{background:linear-gradient(160deg,#16281f,#151d1e);cursor:default}
+  .word{font-size:clamp(26px,5.4vw,44px);font-weight:800;line-height:1.2;word-break:break-word}
+  .word.small{font-size:clamp(20px,3.6vw,30px);font-weight:700}
+  .scroll{width:auto;max-width:100%;padding:0 2px}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  .answer-list{margin:0;padding:0;list-style:none;text-align:left;width:100%}
+  .answer-list li{padding:8px 10px;border-radius:9px;background:#19212c;border:1px solid #26313a;margin-bottom:6px;font-size:16px}
+  .answer-list li .k{color:var(--pri);font-weight:700}
+  .notes{color:var(--muted);font-size:13px;margin-top:8px}
+  .raghint{display:inline-flex;gap:6px;align-items:center;background:rgba(124,156,255,.12);border:1px solid #33406b;color:#b9c6ff;border-radius:9px;padding:5px 11px;font-size:13.5px;margin-top:4px}
+  .assign{display:flex;gap:8px;flex-wrap:wrap}
+  .assign .btn,.assign .ghost{flex:1 1 120px}
+  .progline{height:6px;background:#20263a;border-radius:999px;overflow:hidden;margin:12px 0 4px}
+  .progline i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--acc));width:0;transition:width .3s}
+  .progtext{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  /* ---------- 测验 ---------- */
+  .opts{display:grid;gap:10px;margin-top:14px}
+  .opt{text-align:left;background:#1a2030;border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:13px 15px;font:inherit;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+  .opt:hover:not(:disabled){background:#212942;border-color:#3b4666}
+  .opt .idx{flex:0 0 22px;height:22px;border-radius:6px;background:#2a3350;color:#c3cbe6;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .opt.correct{background:rgba(62,207,142,.16);border-color:var(--pri)}
+  .opt.wrong{background:rgba(255,107,129,.14);border-color:var(--bad)}
+  .opt:disabled{cursor:default;opacity:1}
+  .quizhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .score{font-size:44px;font-weight:800;line-height:1.1}
+  /* ---------- 词根补全 ---------- */
+  .acwrap{position:relative}
+  .acbox{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#141a2a;border:1px solid var(--line);border-radius:11px;box-shadow:var(--sh);z-index:40;max-height:262px;overflow:auto;padding:5px}
+  .acitem{display:flex;gap:9px;align-items:baseline;padding:7px 9px;border-radius:8px;cursor:pointer}
+  .acitem:hover,.acitem.on{background:#232c45}
+  .acitem .r{font-weight:700;color:#dfe6ff;min-width:92px}
+  .acitem .m{color:#c3cbe6;font-size:13px}
+  .acitem .c{color:var(--dim);font-size:12px;margin-left:auto;white-space:nowrap}
+  .acempty{padding:9px;color:var(--dim);font-size:13px}
+  /* ---------- 批量 ---------- */
+  .batchbar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;
+    background:#1b2334;border:1px solid #33406b;border-radius:14px;padding:10px 14px;box-shadow:0 14px 40px rgba(0,0,0,.5);max-width:calc(100vw - 24px)}
+  .batchbar .cnt{font-size:13.5px;color:#cfe0ff;font-weight:600;margin-right:4px}
+  /* ---------- 提示 ---------- */
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;align-items:center;pointer-events:none}
+  .toast{background:#20263a;border:1px solid var(--line);border-left:3px solid var(--pri);padding:10px 16px;border-radius:10px;box-shadow:var(--sh);font-size:14px;animation:pop .25s ease}
+  .toast.bad{border-left-color:var(--bad)}
+  .toast.warn{border-left-color:var(--warn)}
+  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  /* ---------- 弹窗 ---------- */
+  .mask{position:fixed;inset:0;background:rgba(8,10,16,.72);display:grid;place-items:center;z-index:80;padding:16px}
+  .modal{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:16px;max-width:660px;width:100%;max-height:86vh;overflow:auto;padding:18px;box-shadow:var(--sh)}
+  .modal h3{margin:0 0 6px;font-size:16px;color:var(--txt)}
+  .preview{max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#141826;padding:6px 10px;margin:10px 0}
+  .preview div{display:flex;gap:10px;padding:5px 0;border-bottom:1px dashed #232a3e;font-size:13.5px;flex-wrap:wrap}
+  .preview div:last-child{border-bottom:0}
+  .preview .en{font-weight:700;min-width:30%;word-break:break-word}
+  .preview .zh{color:#cbd3e8;flex:1;word-break:break-word}
+  .preview .dup{color:var(--warn);font-size:12px}
+  .banner{background:rgba(255,180,84,.12);border:1px solid #5a4526;color:#ffd9a3;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13.5px}
+  .hide{display:none !important}
+  @media (max-width:620px){
+    .app{padding:12px 10px 60px}
+    header.top{gap:8px}
+    .brand{font-size:16px;flex:1 1 auto}
+    .brand span.full{display:none}
+    .tabs{order:3;flex:1 1 100%;width:100%;justify-content:space-between}
+    .tabs button{flex:1 1 0;padding:8px 6px;text-align:center}
+    .top .right{order:2;margin-left:0;justify-content:flex-end;flex:0 0 auto}
+    .top .right button{padding:7px 10px;font-size:13px}
+    .face{min-height:250px}
+    .item{flex-direction:column}
+    .item .acts{justify-content:flex-start}
+    .card{padding:13px}
+    .batchbar{bottom:10px;padding:9px 10px;gap:6px}
+    .batchbar button{padding:7px 10px;font-size:13px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><span class="dot">EN</span><span>英语单词本</span><span class="full" style="color:var(--dim);font-weight:500;font-size:13px">/ English · 词根</span></div>
+    <nav class="tabs" id="tabs">
+      <button data-nav="words" class="on">词库</button>
+      <button data-nav="add">录入</button>
+      <button data-nav="study">背诵</button>
+      <button data-nav="quiz">测验</button>
+    </nav>
+    <div class="right">
+      <button class="ghost" data-act="export">导出备份</button>
+      <button class="ghost" data-act="import">导入</button>
+    </div>
+  </header>
+  <div id="alert"></div>
+  <main id="view"></main>
+</div>
+<div id="batch-root"></div>
+<div id="toast"></div>
+<div id="modal-root"></div>
+<input type="file" id="file-in" accept=".json,.txt,.csv,application/json,text/plain" class="hide">
+
+<script>
+(function(){
+'use strict';
+
+/* =========================================================================
+   0. 工具
+   ========================================================================= */
+var $ = function(sel, root){ return (root||document).querySelector(sel); };
+var $$ = function(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); };
+var esc = function(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');   // 单引号也要转义：部分属性/JS 里会用到
+};
+var uid = function(p){
+  return (p||'w') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+};
+var DAY = 86400000;
+var COLORS = ['#3ecf8e','#7c9cff','#ffb454','#ff6b81','#c084fc','#4dd4d4','#f0abfc','#a3e635','#fbbf24','#60a5fa'];
+var ALL = '__all', NONE = '__none';
+var STORE_KEY = 'en_vocab_trainer_v1';
+var storeBroken = false;
+
+/* =========================================================================
+   1. 内置词根库（医学 / 药学为主，含通用前缀后缀）
+   想扩充：往 ROOT_TABLE 里加一行 "词根 | 释义 | 分类 | 例词" 即可。
+   ========================================================================= */
+/* =========================================================================
+   1. 内置词根库（医学 / 药学 / 通用，含通用前缀后缀）
+   一行 = 一个「同义词根组」，代表同一个含义 / 同一个标签。
+   格式：'常用拼写 | 释义 | 分类 | 例词 | 其他可接受的拼写1; 拼写2; …'
+   第 5 段可省略。同一行里的所有拼写都指向同一个标签，
+   例如 cardi- 与 cardio- 都表示「心脏」，输入任意一种都会激活 cardi- 这个标签。
+   想扩充：按同样格式加一行即可。
+   ========================================================================= */
+var ROOT_TABLE = [
+  // ---- 器官与组织 ----
+  'cardi- | 心脏 | 医学 | carditis, cardiology, cardiogram | cardio-',
+  'gastr- | 胃 | 医学 | gastritis, gastroscopy | gastro-',
+  'hepat- | 肝 | 医学 | hepatitis, hepatomegaly | hepato-',
+  'nephr- | 肾 | 医学 | nephritis, nephrology | nephro-',
+  'ren- | 肾 | 医学 | renal failure, renin',
+  'cyst- | 膀胱；囊 | 医学 | cystitis, cystoscopy',
+  'dermat- | 皮肤 | 医学 | dermatitis, dermatology | dermato-',
+  'neur- | 神经 | 医学 | neuritis, neurology | neuro-',
+  'pulmon- | 肺 | 医学 | pulmonary, pulmonologist',
+  'pneum- | 肺；气 | 医学 | pneumonia, pneumothorax | pneumo-; pneumon-',
+  'oste- | 骨 | 医学 | osteitis, osteoporosis | osteo-',
+  'arthr- | 关节 | 医学 | arthritis, arthroscopy | arthro-',
+  'my- | 肌肉 | 医学 | myocardium, myositis | myo-',
+  'chondr- | 软骨 | 医学 | chondritis, chondrocyte | chondro-',
+  'ten- | 肌腱 | 医学 | tendonitis, tenosynovitis | tendin-',
+  'ot- | 耳 | 医学 | otitis, otology | oto-',
+  'ophthalm- | 眼 | 医学 | ophthalmology, ophthalmoscope',
+  'ocul- | 眼 | 医学 | ocular, oculomotor',
+  'rhin- | 鼻 | 医学 | rhinitis, rhinoplasty',
+  'laryng- | 喉 | 医学 | laryngitis, laryngoscope',
+  'trache- | 气管 | 医学 | tracheitis, tracheostomy',
+  'bronch- | 支气管 | 医学 | bronchitis, bronchoscopy',
+  'hyster- | 子宫 | 医学 | hysterectomy, hysteria',
+  'oophor- | 卵巢 | 医学 | oophorectomy',
+  'mamm- | 乳房 | 医学 | mammogram, mammoplasty | mast-',
+  'odont- | 牙 | 医学 | orthodontics, odontalgia',
+  'gloss- | 舌 | 医学 | glossitis, glossopharyngeal',
+  'vas- | 血管；输精管 | 医学 | vasoconstriction, vasectomy | vascul-',
+  // ---- 体液与成分 ----
+  'hem- | 血 | 医学 | hemorrhage, hemoglobin | hemo-; haem-; haemo-',
+  'angi- | 血管 | 医学 | angitis, angiography | angio-',
+  'phleb- | 静脉 | 医学 | phlebitis, phlebotomy',
+  'arteri- | 动脉 | 医学 | arteritis, arteriosclerosis',
+  'cyt- | 细胞 | 医学 | cytology, leukocyte | cyto-',
+  'hist- | 组织 | 医学 | histology, histamine',
+  'aden- | 腺 | 医学 | adenoma, adenoid | adeno-',
+  'lip- | 脂肪 | 医学 | lipid, lipoma | lipo-',
+  'glyc- | 糖 | 医学 | glycogen, glycolysis | glyco-',
+  'gluc- | 葡萄糖 | 医学 | glucose, glucagon',
+  // ---- 病症与状态 ----
+  'path- | 疾病 | 医学 | pathology, pathogen | patho-',
+  'alg- | 疼痛 | 医学 | analgesia, neuralgia | alges-',
+  'py- | 脓 | 医学 | pyuria, pyogenic',
+  'sept- | 感染；腐败 | 医学 | septicemia, antiseptic',
+  'necr- | 坏死 | 医学 | necrosis, necrotizing',
+  'scler- | 硬化 | 医学 | sclerosis, scleroderma',
+  'sten- | 狭窄 | 医学 | stenosis, stenotic',
+  'spasm- | 痉挛 | 医学 | spasm, spasmolytic',
+  'edem- | 水肿 | 医学 | edema, edematous',
+  'carcin- | 癌 | 医学 | carcinoma, carcinogen',
+  'onc- | 肿瘤 | 医学 | oncology, oncogene | onco-',
+  'emesis- | 呕吐 | 医学 | emesis, antiemetic',
+  // ---- 通用后缀 ----
+  '-itis | 炎症 | 通用 | arthritis, bronchitis, dermatitis',
+  '-osis | 病态；增生 | 通用 | neurosis, osteoporosis, stenosis',
+  '-oma | 肿块；肿瘤 | 通用 | carcinoma, adenoma, lipoma',
+  '-pathy | 病变 | 通用 | neuropathy, myopathy, nephropathy | -pathia',
+  '-emia | 血液状况 | 通用 | anemia, leukemia, glycemia | -aemia',
+  '-uria | 尿 | 通用 | polyuria, hematuria, pyuria',
+  '-algia | 疼痛 | 通用 | neuralgia, myalgia, cephalalgia',
+  '-megaly | 增大 | 通用 | cardiomegaly, hepatomegaly | -megalia',
+  '-penia | 减少；缺乏 | 通用 | leukopenia, thrombocytopenia',
+  '-plasia | 生长；形成 | 通用 | hyperplasia, dysplasia, neoplasia',
+  '-trophy | 营养；生长 | 通用 | atrophy, hypertrophy, dystrophy',
+  '-rrhea | 流出 | 通用 | diarrhea, rhinorrhea, amenorrhea | -rrhoea',
+  '-rrhagia | 出血 | 通用 | hemorrhage, menorrhagia',
+  '-ptosis | 下垂 | 通用 | nephroptosis, blepharoptosis',
+  '-plegia | 麻痹 | 通用 | paraplegia, hemiplegia',
+  '-pnea | 呼吸 | 通用 | dyspnea, apnea, tachypnea | -pnoea',
+  '-phagia | 吞咽 | 通用 | dysphagia, aphagia',
+  '-esthesia | 感觉 | 通用 | anesthesia, paresthesia | -aesthesia; esthesi-',
+  '-tripsy | 碎石 | 通用 | lithotripsy',
+  // ---- 通用前缀 ----
+  'a- | 无；缺乏 | 通用 | anemia, apnea, atrophy | an-',
+  'dys- | 异常；困难 | 通用 | dyspnea, dysfunction, dysplasia',
+  'hyper- | 过度；过高 | 通用 | hypertension, hyperplasia',
+  'hypo- | 不足；过低 | 通用 | hypoglycemia, hypotension',
+  'tachy- | 快 | 通用 | tachycardia, tachypnea',
+  'brady- | 慢 | 通用 | bradycardia, bradypnea',
+  'poly- | 多 | 通用 | polyuria, polycythemia',
+  'oligo- | 少 | 通用 | oliguria, oligospermia',
+  'macro- | 大 | 通用 | macrophage, macrocyte',
+  'micro- | 小 | 通用 | microcyte, microsurgery',
+  'leuk- | 白 | 通用 | leukemia, leukocyte | leuko-; leuco-',
+  'erythr- | 红 | 通用 | erythrocyte, erythema | erythro-',
+  'cyan- | 青紫 | 通用 | cyanosis, cyanotic',
+  'melan- | 黑 | 通用 | melanoma, melanin',
+  'xanth- | 黄 | 通用 | xanthoma, xanthochromia',
+  'neo- | 新 | 通用 | neoplasm, neonatal',
+  'mal- | 坏；不良 | 通用 | malignant, malnutrition',
+  'uni- | 单 | 通用 | unilateral, unipolar',
+  'bi- | 双 | 通用 | bilateral, bicuspid',
+  'tri- | 三 | 通用 | tricuspid, trimester',
+  'multi- | 多 | 通用 | multinucleated, multipara',
+  'trans- | 穿过；转移 | 通用 | transfusion, transplant',
+  'sub- | 下；次 | 通用 | subcutaneous, subacute',
+  'supra- | 上 | 通用 | suprarenal, supraorbital',
+  'inter- | 之间 | 通用 | intercostal, intervertebral',
+  'intra- | 内 | 通用 | intravenous, intracranial',
+  'extra- | 外 | 通用 | extracellular, extrauterine',
+  'peri- | 周围 | 通用 | pericardium, peritonitis',
+  'endo- | 内；内部 | 通用 | endoscopy, endocrine',
+  'hydr- | 水 | 通用 | dehydration, hydrolysis | hydro-',
+  'therm- | 热 | 通用 | thermometer, hypothermia',
+  'cry- | 冷 | 通用 | cryotherapy, cryosurgery',
+  'kine- | 运动 | 通用 | kinesiology, akinetic',
+  'morph- | 形态 | 通用 | morphology, morphogenesis',
+  'gen- | 产生；起源 | 通用 | pathogen, carcinogen, genesis',
+  'log- | 学科；研究 | 通用 | biology, cardiology | -logy',
+  'iatr- | 治疗；医师 | 通用 | pediatrics, psychiatry',
+  'orth- | 直；正 | 通用 | orthopedics, orthodontics',
+  'chron- | 时间；慢性 | 通用 | chronic, chronology',
+  'acut- | 急性 | 通用 | acute, subacute',
+  'somat- | 身体 | 通用 | somatic, psychosomatic',
+  '-plasty | 成形术 | 通用 | rhinoplasty, angioplasty',
+  '-pexy | 固定术 | 通用 | nephropexy, gastropexy',
+  '-rrhaphy | 缝合术 | 通用 | herniorrhaphy',
+  // ---- 医学：手术与影像 ----
+  '-ectomy | 切除术 | 医学 | appendectomy, gastrectomy',
+  '-otomy | 切开术 | 医学 | tracheotomy, laparotomy',
+  '-ostomy | 造口术 | 医学 | colostomy, tracheostomy',
+  '-scopy | 内窥镜检查 | 医学 | endoscopy, colonoscopy',
+  '-graphy | 造影；记录 | 医学 | radiography, angiography',
+  // ---- 医学：专科与部位 ----
+  'ped- | 儿童 | 医学 | pediatrics, pediatrician',
+  'ger- | 老年 | 医学 | geriatrics, gerontology',
+  'obstetr- | 产科 | 医学 | obstetrics, obstetrician',
+  'gynec- | 女性 | 医学 | gynecology, gynecologist',
+  'psych- | 精神；心理 | 医学 | psychiatry, psychology | psycho-',
+  'viscer- | 内脏 | 医学 | visceral, viscera',
+  'splanchn- | 内脏 | 医学 | splanchnic, splanchnicectomy',
+  'cut- | 皮肤 | 医学 | cutaneous, subcutaneous',
+  'muc- | 黏液 | 医学 | mucous, mucosa',
+  'ser- | 血清；浆液 | 医学 | serum, serous',
+  'lymph- | 淋巴 | 医学 | lymphocyte, lymphoma',
+  'splen- | 脾 | 医学 | splenomegaly, splenectomy',
+  'thromb- | 血栓 | 医学 | thrombosis, thrombocyte',
+  'coagul- | 凝血 | 医学 | coagulation, anticoagulant',
+  'fibr- | 纤维 | 医学 | fibrin, fibrosis',
+  'neoplas- | 新生物 | 医学 | neoplasm, neoplasia',
+  'metastas- | 转移 | 医学 | metastasis, metastatic',
+  'echin- | 棘；刺 | 通用 | echinocyte, Echinacea',
+  // ---- 药学：总论与机制 ----
+  'pharmac- | 药 | 药学 | pharmacology, pharmacokinetics | pharmaco-',
+  'tox- | 毒 | 药学 | toxicology, toxin | toxi-; toxic-',
+  'chem- | 化学 | 药学 | chemotherapy, chemokine | chemo-',
+  'ceut- | 药剂 | 药学 | pharmaceutical, nutraceutical',
+  'anti- | 抗 | 药学 | antibiotic, antidote, antiseptic',
+  'bacteri- | 细菌 | 药学 | bactericidal, bacteriostatic',
+  'vira- | 病毒 | 药学 | antiviral, virucidal',
+  'fungi- | 真菌 | 药学 | fungicide, fungistatic',
+  '-ide | 化合物类后缀 | 药学 | bromide, fluoride',
+  '-form | 剂型后缀 | 药学 | tablet form, gel formulation',
+  'immuno- | 免疫 | 药学 | immunosuppressant, immunotherapy',
+  'vaccin- | 疫苗 | 药学 | vaccination, vaccine',
+  'placebo- | 安慰剂 | 药学 | placebo, placebo-controlled',
+  'contra- | 相反；禁忌 | 药学 | contraindication, contraceptive',
+  'adverse- | 不良 | 药学 | adverse effect, adverse reaction',
+  'ster- | 甾体；类固醇 | 药学 | steroid, steroidal',
+  'cortico- | 皮质 | 药学 | corticosteroid, cortisol',
+  'opioid- | 阿片 | 药学 | opioid, opioidergic',
+  'anesthes- | 麻醉 | 药学 | anesthesia, anesthetic',
+  'vitamin- | 维生素 | 药学 | vitamin, multivitamin',
+  'nutri- | 营养 | 药学 | nutrient, nutrition, malnutrition',
+  'sorb- | 吸收 | 药学 | absorb, adsorb, resorption',
+  'solu- | 溶解 | 药学 | soluble, dissolution',
+  'suspens- | 混悬 | 药学 | suspension, suspend',
+  'emuls- | 乳化 | 药学 | emulsion, emulsifier',
+  'formul- | 处方 | 药学 | formulation, formula',
+  'dos- | 剂量 | 药学 | dosage, dose | dose-',
+  'bio- | 生物 | 通用 | biology, bioavailability',
+  'avail- | 可利用 | 药学 | bioavailability, available',
+  'half-life | 半衰期 | 药学 | half-life, elimination half-life',
+  // ---- 药学：药名后缀（分类） ----
+  '-cillin | 青霉素类 | 药学 | amoxicillin, penicillin',
+  '-cycline | 四环素类 | 药学 | doxycycline, tetracycline',
+  '-mycin | 霉素类 | 药学 | erythromycin, gentamicin',
+  '-floxacin | 喹诺酮类 | 药学 | ciprofloxacin, levofloxacin',
+  '-prazole | 质子泵抑制剂 | 药学 | omeprazole, esomeprazole',
+  '-tidine | H2 受体拮抗剂 | 药学 | ranitidine, cimetidine',
+  '-sartan | 血管紧张素受体拮抗剂 | 药学 | losartan, valsartan',
+  '-pril | 血管紧张素转化酶抑制剂 | 药学 | lisinopril, enalapril',
+  '-olol | β 受体阻滞剂 | 药学 | propranolol, metoprolol',
+  '-dipine | 钙通道阻滞剂 | 药学 | amlodipine, nifedipine',
+  '-statin | 他汀类降脂药 | 药学 | atorvastatin, simvastatin',
+  '-azepam | 苯二氮䓬类 | 药学 | diazepam, lorazepam',
+  '-formin | 双胍类降糖药 | 药学 | metformin, phenformin',
+  '-vir | 抗病毒药 | 药学 | acyclovir, remdesivir',
+  '-zumab | 单克隆抗体 | 药学 | adalimumab, trastuzumab',
+  '-nib | 激酶抑制剂 | 药学 | imatinib, erlotinib'
+];
+
+/* 同义词根组：一个 tag = 一组可接受的拼写，输入任意一种都指向同一个 key */
+var ROOT_ALIAS = {};      // 任意拼写的 key -> 代表拼写的 key
+var VARIANT_TEXT = {};    // 代表拼写的 key -> 其他可接受拼写的显示名数组
+var ROOTS = ROOT_TABLE.map(function(line){
+  var f = line.split('|').map(function(s){ return s.trim(); });
+  var item = { root: f[0], gloss: f[1] || '', cat: f[2] || '', ex: f[3] || '', variants: [], all: [] };
+  item.key = rootKey(item.root);
+  item.variants = (f[4] || '').split(/[;；、,，]/).map(function(s){ return s.trim(); }).filter(Boolean);
+  item.all = [item.root].concat(item.variants);
+  return item;
+}).filter(function(item){ return !!item.key; });
+
+ROOTS.forEach(function(item){
+  ROOT_ALIAS[item.key] = item.key;                     // 代表拼写
+  item.variants.forEach(function(v){
+    var k = rootKey(v);
+    if(k && !ROOT_ALIAS[k]) ROOT_ALIAS[k] = item.key;  // 变体指向代表拼写
+  });
+  VARIANT_TEXT[item.key] = item.variants.slice();
+});
+
+/* ---- 自定义词根：用户自己加的词根（含同义拼写），持久化在 DB.customRoots ---- */
+var CUSTOM_ROOTS = [];
+var CUSTOM_KEYS = {};
+/* 内置词根用掉的所有拼写（自定义词根不能与它们冲突） */
+var ALL_BUILTIN_KEYS = {};
+ROOTS.forEach(function(item){
+  ALL_BUILTIN_KEYS[item.key] = 1;
+  item.variants.forEach(function(v){ var k = rootKey(v); if(k) ALL_BUILTIN_KEYS[k] = 1; });
+});
+/* 把 DB.customRoots 合并进索引，使它们和内置词根一样能被补全、归并、分组 */
+function rebuildRootRegistry(){
+  // 先清掉上一轮自定义词根注册的别名与变体文本，避免删除后残留
+  Object.keys(CUSTOM_KEYS).forEach(function(k){
+    var item = CUSTOM_KEYS[k];
+    (item.all||[]).forEach(function(sp){ if(ROOT_ALIAS[rootKey(sp)] === k) delete ROOT_ALIAS[rootKey(sp)]; });
+    delete VARIANT_TEXT[k];
+  });
+  CUSTOM_ROOTS = [];
+  CUSTOM_KEYS = {};
+  (DB.customRoots || []).forEach(function(cr){
+    var key = rootKey(cr.root);
+    if(!key || ROOT_ALIAS[key] || CUSTOM_KEYS[key]) return;   // 与内置或其他自定义冲突则跳过
+    var item = {
+      root: String(cr.root).trim(),
+      gloss: String(cr.gloss||'').trim(),
+      cat: String(cr.cat||'自定义').trim() || '自定义',
+      ex: String(cr.ex||'').trim(),
+      variants: (cr.variants||[]).map(function(v){ return String(v).trim(); }).filter(Boolean),
+      custom: true
+    };
+    item.key = key;
+    item.all = [item.root].concat(item.variants);
+    CUSTOM_ROOTS.push(item);
+    CUSTOM_KEYS[key] = item;
+    ROOT_ALIAS[key] = key;
+    item.variants.forEach(function(v){
+      var k = rootKey(v);
+      if(k && !ROOT_ALIAS[k]) ROOT_ALIAS[k] = key;
+    });
+    VARIANT_TEXT[key] = item.variants.slice();
+  });
+}
+
+/* 词根归一化：去掉首尾连字符与多余空格，统一小写比较 */
+function rootKey(s){ return String(s||'').replace(/^[\s\-–—]+|[\s\-–—]+$/g,'').trim().toLowerCase(); }
+/* 显示时补回连字符：前缀带尾连字符、后缀带头连字符 */
+function rootLabel(s){
+  var t = String(s||'').trim();
+  if(!t) return '';
+  if(/^-/.test(t)) return '-' + rootKey(t);
+  if(/-$/.test(t)) return rootKey(t) + '-';
+  return t;
+}
+/* 把任意拼写归一到「同义词根组的代表拼写」；未知词根原样返回（自定义） */
+function canonicalRoot(s){
+  var k = rootKey(s);
+  if(!k) return String(s||'').trim();
+  var ck = ROOT_ALIAS[k];
+  if(!ck) return String(s||'').trim();
+  if(CUSTOM_KEYS[ck]) return CUSTOM_KEYS[ck].root;
+  for(var i=0;i<ROOTS.length;i++){ if(ROOTS[i].key === ck) return ROOTS[i].root; }
+  return String(s||'').trim();
+}
+/* 归一化 + 按同义词根组去重 */
+function normalizeRoots(v){
+  var arr;
+  if(Array.isArray(v)) arr = v;
+  else arr = String(v==null?'':v).split(/[;；,，、\/|]/);
+  var out = [];
+  arr.forEach(function(x){
+    var t = canonicalRoot(x);
+    if(!t) return;
+    var k = rootKey(t);
+    if(out.some(function(y){ return rootKey(y) === k; })) return;
+    if(out.length < 8) out.push(t);
+  });
+  return out;
+}
+function rootsOf(w){ return (w && Array.isArray(w.roots))? w.roots : []; }
+function rootInfo(r){
+  var k = rootKey(r);
+  var ck = ROOT_ALIAS[k] || k;
+  if(CUSTOM_KEYS[ck]) return CUSTOM_KEYS[ck];
+  for(var i=0;i<ROOTS.length;i++){ if(ROOTS[i].key === ck) return ROOTS[i]; }
+  return null;
+}
+/* 同一个 tag 的其他可接受拼写（不含代表拼写） */
+function rootVariants(r){
+  var info = rootInfo(r);
+  return info ? (VARIANT_TEXT[info.key] || []) : [];
+}
+/* 用于提示的完整拼写列表：'cardi- / cardio-' */
+function rootSpellings(r){
+  var info = rootInfo(r);
+  if(!info) return rootLabel(r);
+  return [info.root].concat(info.variants).map(rootLabel).join(' / ');
+}
+function rootText(w){
+  return rootsOf(w).map(rootLabel).join(' ');
+}
+/* 全部词根（内置 + 自定义）：自定义的追加在后面，并带 custom 标记 */
+function allRoots(){ return ROOTS.concat(CUSTOM_ROOTS); }
+/* 词根下拉选择器的候选：一个含义只出一行（列出它所有可接受拼写） */
+function rootMatches(query, limit){
+  var lib = allRoots();
+  var q = String(query||'').trim().toLowerCase();
+  var qk = q.replace(/[\s\-–—]/g,'');
+  var out = [];
+  if(!q) return lib.slice(0, limit||12);
+  // 1) 代表拼写或任一别名以查询开头
+  lib.forEach(function(r){
+    if(r.all.some(function(a){ return rootKey(a).indexOf(qk) === 0; })) out.push(r);
+  });
+  // 2) 任意位置匹配
+  lib.forEach(function(r){
+    if(out.indexOf(r) >= 0) return;
+    if(r.all.some(function(a){ return rootKey(a).indexOf(qk) > 0; })) out.push(r);
+  });
+  // 3) 释义 / 分类 / 例词匹配（支持用中文搜，如「炎」「心脏」）
+  lib.forEach(function(r){
+    if(out.indexOf(r) >= 0) return;
+    var hay = (r.gloss + ' ' + r.cat + ' ' + r.ex).toLowerCase();
+    if(hay.indexOf(q) >= 0) out.push(r);
+  });
+  return out.slice(0, limit || 12);
+}
+/* 某个词根（按代表拼写 key）是否还有别的拼写 / 是否属于自定义 */
+function customRootsList(){
+  var out = [];
+  (DB.customRoots||[]).forEach(function(cr){
+    var info = rootInfo(cr.root);
+    if(info) out.push(info);
+  });
+  return out;
+}
+/* 查一个词根 key 是否被任何词使用 */
+function rootUsage(key){
+  return DB.words.filter(function(w){
+    return rootsOf(w).some(function(r){ return rootKey(r) === key; });
+  }).length;
+}
+
+/* =========================================================================
+   2. 数据层
+   ========================================================================= */
+function blankDB(){ return { version:1, words:[], groups:[], customRoots:[] }; }
+
+function safeGet(){
+  try{ return localStorage.getItem(STORE_KEY); }catch(e){ storeBroken = true; return null; }
+}
+function safeSet(str){
+  try{ localStorage.setItem(STORE_KEY, str); return true; }
+  catch(e){ storeBroken = true; return false; }
+}
+function normalizeDB(raw){
+  var db = blankDB();
+  if(!raw || typeof raw !== 'object') return db;
+  var gs = Array.isArray(raw.groups)? raw.groups : [];
+  gs.forEach(function(g){
+    if(!g) return;
+    var name = String(g.name==null?'':g.name).trim();
+    if(!name) return;
+    if(db.groups.some(function(x){ return x.name === name; })) return;
+    db.groups.push({
+      id: String(g.id || uid('g')),
+      name: name,
+      color: /^#[0-9a-fA-F]{3,8}$/.test(String(g.color||''))? g.color : COLORS[db.groups.length % COLORS.length]
+    });
+  });
+  var ws = Array.isArray(raw.words)? raw.words : [];
+  var gidByName = {};
+  db.groups.forEach(function(g){ gidByName[g.name] = g.id; });
+  // 自定义词根（用户自己添加的）：去重、规范化
+  var seenCustom = {};
+  (Array.isArray(raw.customRoots)? raw.customRoots : []).forEach(function(cr){
+    if(!cr) return;
+    var root = String(cr.root==null?'':cr.root).trim();
+    var key = rootKey(root);
+    if(!key || seenCustom[key]) return;
+    seenCustom[key] = 1;
+    var variants = (Array.isArray(cr.variants)? cr.variants : String(cr.variants||'').split(/[;；、,，]/))
+      .map(function(v){ return String(v||'').trim(); })
+      .filter(function(v){ return v && rootKey(v) !== key; });
+    db.customRoots.push({
+      root: root,
+      variants: variants,
+      gloss: String(cr.gloss==null?'':cr.gloss).trim(),
+      cat: String(cr.cat==null?'':cr.cat).trim(),
+      ex: String(cr.ex==null?'':cr.ex).trim()
+    });
+  });
+  ws.forEach(function(w){
+    if(!w) return;
+    // en = 英语词条；pt 为旧版（葡语）字段，做一次兼容读取
+    var en = String((w.en != null ? w.en : (w.pt != null ? w.pt : '')) || '').trim();
+    var zh = String(w.zh==null?'':w.zh).trim();
+    if(!en && !zh) return;
+    var ids = [];
+    if(Array.isArray(w.groupIds)) ids = w.groupIds.map(String);
+    else if(Array.isArray(w.groups)) ids = w.groups.map(function(n){ return gidByName[String(n)]; }).filter(Boolean);
+    ids = ids.filter(function(id, i){ return id && ids.indexOf(id) === i && db.groups.some(function(g){ return g.id === id; }); });
+    var m = Number(w.mastery);
+    db.words.push({
+      id: String(w.id || uid()),
+      en: en,
+      zh: zh,
+      roots: normalizeRoots(w.roots != null ? w.roots : w.root),
+      notes: String(w.notes==null?'':w.notes),
+      groupIds: ids,
+      mastery: (m===1||m===2)? m : 0,
+      reviews: Number(w.reviews)||0,
+      correct: Number(w.correct)||0,
+      wrong: Number(w.wrong)||0,
+      lastAt: Number(w.lastAt)||0,
+      createdAt: Number(w.createdAt)||Date.now()
+    });
+  });
+  return db;
+}
+
+var DB = (function(){
+  var raw = safeGet();
+  if(!raw) return blankDB();
+  try{ return normalizeDB(JSON.parse(raw)); }
+  catch(e){ storeBroken = true; return blankDB(); }
+})();
+/* 用户自定义词根参与索引（补全、归并、分组都靠它） */
+rebuildRootRegistry();
+
+function save(){
+  var ok = safeSet(JSON.stringify(DB));
+  if(!ok && !save.warned){
+    save.warned = true;
+    renderAlert();
+    toast('无法写入本地存储，本次改动不会被保存', 'bad');
+  }
+}
+
+/* =========================================================================
+   3. 读取辅助
+   ========================================================================= */
+function groupById(id){
+  for(var i=0;i<DB.groups.length;i++){ if(DB.groups[i].id===id) return DB.groups[i]; }
+  return null;
+}
+function groupsOf(w){
+  return (w.groupIds||[]).map(groupById).filter(Boolean);
+}
+function groupLabel(w){
+  var gs = groupsOf(w);
+  return gs.length? gs.map(function(g){ return g.name; }).join(' / ') : '未分组';
+}
+function wordById(id){
+  for(var i=0;i<DB.words.length;i++){ if(DB.words[i].id===id) return DB.words[i]; }
+  return null;
+}
+function dueInterval(w){
+  if(w.mastery >= 2) return 7*DAY;
+  if(w.mastery === 1) return 2*DAY;
+  return 0;
+}
+function isDue(w, now){
+  if(w.mastery === 0) return true;
+  if(!w.lastAt) return true;
+  if(now === undefined || now === null) now = Date.now();
+  return (now - w.lastAt) >= dueInterval(w);
+}
+function startOfToday(){
+  var d = new Date(); d.setHours(0,0,0,0); return d.getTime();
+}
+function isTouchedToday(w, today){
+  return w.lastAt >= today;
+}
+function filterWords(opts){
+  var now = Date.now(), today = startOfToday();
+  return DB.words.filter(function(w){
+    if(opts.groupIds && opts.groupIds.length && !w.groupIds.some(function(id){ return opts.groupIds.indexOf(id) >= 0; })) return false;
+    if(opts.scope === 'due' && !isDue(w, now)) return false;
+    if(opts.scope === 'new' && w.mastery !== 0) return false;
+    if(opts.scope === 'weak' && !(w.mastery < 2 || w.wrong > 0)) return false;
+    if(opts.scope === 'today' && !isTouchedToday(w, today)) return false;
+    return true;
+  });
+}
+function groupCount(gid){
+  return DB.words.filter(function(w){ return w.groupIds.indexOf(gid) >= 0; }).length;
+}
+function masteryText(w){
+  return w.mastery===0? '新词' : (w.mastery===1? '在学' : '已熟悉');
+}
+function masteryDots(w){
+  var filled = w.mastery === 0? 0 : w.mastery + 1;
+  var s = '<span class="dots" title="掌握程度：' + masteryText(w) + '">';
+  for(var i=0;i<3;i++) s += '<i class="'+(i < filled ? 'f':'')+'"></i>';
+  return s + '</span>';
+}
+function shuffle(a){
+  var arr = a.slice();
+  for(var i=arr.length-1;i>0;i--){
+    var j = Math.floor(Math.random()*(i+1)); var t = arr[i]; arr[i]=arr[j]; arr[j]=t;
+  }
+  return arr;
+}
+function pick(arr, n){ return shuffle(arr).slice(0, n); }
+function sortWords(list, mode){
+  list.sort(function(a,b){
+    if(mode === 'new') return b.createdAt - a.createdAt;
+    if(mode === 'level') return (a.mastery - b.mastery) || a.en.localeCompare(b.en, 'en');
+    if(mode === 'wrong') return (b.wrong - a.wrong) || (b.reviews - a.reviews) || a.en.localeCompare(b.en, 'en');
+    return a.en.localeCompare(b.en, 'en');
+  });
+  return list;
+}
+
+/* =========================================================================
+   4. 掌握度更新（背诵 / 测验共用）
+   ========================================================================= */
+function markReview(w, result){
+  w.reviews += 1;
+  w.lastAt = Date.now();
+  if(result === 'good'){ w.correct += 1; w.mastery = Math.min(2, w.mastery + 1); }
+  else if(result === 'ok'){ w.correct += 1; w.mastery = Math.max(1, w.mastery); }
+  else { w.wrong += 1; w.mastery = 0; }
+}
+
+/* =========================================================================
+   5. 提示 / 弹窗
+   ========================================================================= */
+function toast(msg, kind){
+  var box = $('#toast');
+  var el = document.createElement('div');
+  el.className = 'toast' + (kind? ' '+kind : '');
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); }, 2600);
+}
+function openModal(html, onMount){
+  var root = $('#modal-root');
+  acClose();                                  // 清掉可能残留的词根补全
+  root.innerHTML = '<div class="mask"><div class="modal">'+html+'</div></div>';
+  var mask = $('.mask', root);
+  mask.addEventListener('mousedown', function(e){ if(e.target === mask) closeModal(); });
+  if(onMount) onMount($('.modal', root));
+}
+function closeModal(){ acClose(); $('#modal-root').innerHTML = ''; }
+function confirmBox(title, text, okText, onOk){
+  openModal(
+    '<h3>'+esc(title)+'</h3><p class="sub">'+esc(text)+'</p>'+
+    '<div class="row" style="justify-content:flex-end"><button class="ghost" data-x="no">取消</button>'+
+    '<button class="danger" data-x="yes" style="border-color:#5b2c38;background:#2a1821">'+esc(okText||'确定')+'</button></div>',
+    function(m){
+      $('[data-x=no]', m).onclick = closeModal;
+      $('[data-x=yes]', m).onclick = function(){ closeModal(); onOk(); };
+    });
+}
+function renderAlert(){
+  var box = $('#alert');
+  if(!storeBroken){ box.innerHTML=''; return; }
+  if($('.banner', box)) return;
+  box.innerHTML = '<div class="banner">⚠ 浏览器本地存储不可用（可能处于隐私模式），数据只能在本页停留期间保留。建议改用普通窗口打开，并定期「导出备份」。</div>';
+}
+
+/* =========================================================================
+   6. 文本解析（录入用）
+   格式：英语 / 汉语 / 词根 / 分组      —— 分隔符只用斜杠 "/"
+   后两段可省略。段落判定规则：
+     带 []             → 分组（内部可用 、; 分隔多个组）
+     整段都是 ASCII 词根形（cardi- / -itis / half-life）→ 词根（可用 ; 分隔多个）
+     其余（中文、多词短语）→ 分组
+   ========================================================================= */
+var SEP_SLASH = /[\/／]/;
+var ROOT_LIKE = /^-{0,2}[A-Za-z][A-Za-z0-9'’.\-–—]{0,23}$/;   // 形如 cardi- / -itis / half-life
+function parseLines(text){
+  var out = [];
+  var knownGroups = {};
+  DB.groups.forEach(function(g){ knownGroups[g.name] = 1; });
+  String(text||'').split(/\r?\n/).forEach(function(line){
+    var raw = line.trim();
+    if(!raw) return;
+    if(/^#/.test(raw)) return;                       // # 开头是注释
+    var parts = raw.split(SEP_SLASH).map(function(s){ return s.trim(); });
+    if(parts.length === 1 && !parts[0]) return;
+    var en = parts.shift() || '';
+    var zh = parts.length ? parts.shift() : '';
+    var roots = [], groups = [];
+    parts.forEach(function(seg){
+      if(!seg) return;
+      var m = seg.match(/[\[【{]([^\]】}]+)[\]】}]/);   // 带 [] => 一定是分组
+      if(m){
+        m[1].split(/[、,，;；|]/).forEach(function(x){
+          var t = x.trim(); if(t && groups.indexOf(t) < 0) groups.push(t);
+        });
+        return;
+      }
+      // 先把一段按分隔符拆成若干项，再逐项判定词根 / 分组（避免 "cardi- ; -itis" 因含空格被误判）
+      var toks = seg.split(/[;；,，、|]/).map(function(x){ return x.trim(); }).filter(Boolean);
+      if(!toks.length) return;
+      var allRoots = toks.every(function(t){ return ROOT_LIKE.test(t); });
+      toks.forEach(function(t){
+        if(allRoots){
+          if(roots.indexOf(t) < 0) roots.push(t);
+        } else {
+          if(groups.indexOf(t) < 0) groups.push(t);
+        }
+      });
+    });
+    if(!en && !zh){ return; }
+    // 兼容旧写法：中文末尾带 [组名]
+    var gm = zh.match(/[\[【{]([^\]】}]+)[\]】}]\s*$/);
+    if(gm){
+      gm[1].split(/[、,，;；|]/).forEach(function(x){
+        var t = x.trim(); if(t && groups.indexOf(t) < 0) groups.push(t);
+      });
+      zh = zh.slice(0, gm.index).trim();
+    }
+    out.push({ en:en, zh:zh, roots:roots, groupNames:groups });
+  });
+  return out;
+}
+/* CSV：表头可用 pt/en, zh, root(s), notes, groups */
+function parseCSV(text){
+  var rows = [], row = [], cur = '', q = false;
+  var s = String(text||'').replace(/^\uFEFF/, '');
+  for(var i=0;i<s.length;i++){
+    var c = s[i];
+    if(q){
+      if(c === '"'){ if(s[i+1] === '"'){ cur += '"'; i++; } else q = false; }
+      else cur += c;
+    } else {
+      if(c === '"') q = true;
+      else if(c === ','){ row.push(cur); cur=''; }
+      else if(c === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else if(c === '\r'){ /* skip */ }
+      else cur += c;
+    }
+  }
+  if(cur.length || row.length){ row.push(cur); rows.push(row); }
+  rows = rows.filter(function(r){ return r.some(function(v){ return String(v).trim()!==''; }); });
+  if(!rows.length) return [];
+  var start = 0, groupsCol = -1, rootsCol = -1, notesCol = -1;
+  var head = rows[0].map(function(v){ return String(v).trim().toLowerCase(); });
+  var hasHead = head.indexOf('pt') >= 0 || head.indexOf('en') >= 0 || head.indexOf('word') >= 0 ||
+                head.indexOf('英语') >= 0 || head.indexOf('葡语') >= 0;
+  if(hasHead){
+    start = 1;
+    var findCol = function(names){
+      for(var c=0;c<head.length;c++){ if(names.indexOf(head[c]) >= 0) return c; }
+      return -1;
+    };
+    notesCol = findCol(['notes','note','备注']);
+    rootsCol = findCol(['root','roots','词根']);
+    groupsCol = findCol(['groups','group','分组','组']);
+  }
+  var out = [];
+  for(var r=start;r<rows.length;r++){
+    var cells = rows[r].map(function(v){ return String(v).trim(); });
+    var e = cells[0]||'', zh = cells[1]||'';
+    if(!e && !zh) continue;
+    var roots = rootsCol >= 0 ? normalizeRoots(cells[rootsCol]) : [];
+    var gn = [];
+    if(groupsCol >= 0) gn = cells[groupsCol].split(/[\/、,，;；|]/).map(function(x){ return x.trim(); }).filter(Boolean);
+    else if(rootsCol < 0 && cells[2]) gn = cells[2].split(/[\/、,，;；|]/).map(function(x){ return x.trim(); }).filter(Boolean);
+    out.push({ en:e, zh:zh, roots:roots, notes: notesCol >= 0 ? (cells[notesCol]||'') : '', groupNames:gn });
+  }
+  return out;
+}
+function looksJSON(text){
+  var t = String(text||'').trim();
+  return t.charAt(0) === '{' || t.charAt(0) === '[';
+}
+
+/* =========================================================================
+   7. 写入辅助
+   ========================================================================= */
+function ensureGroup(name, color){
+  name = String(name||'').trim();
+  if(!name) return null;
+  var found = DB.groups.filter(function(g){ return g.name === name; })[0];
+  if(found) return found;
+  var g = { id: uid('g'), name: name, color: color || COLORS[DB.groups.length % COLORS.length] };
+  DB.groups.push(g);
+  return g;
+}
+function addEntries(entries){
+  var added = 0, skipped = 0, links = [];
+  entries.forEach(function(e){
+    var en = String(e.en||'').trim(), zh = String(e.zh||'').trim();
+    if(!en && !zh){ skipped++; return; }
+    var gids = [];
+    (e.groupNames||[]).forEach(function(n){
+      var g = ensureGroup(n);
+      if(g && gids.indexOf(g.id) < 0) gids.push(g.id);
+    });
+    var roots = normalizeRoots(e.roots);
+    var idx = -1;
+    for(var i=0;i<DB.words.length;i++){
+      if(DB.words[i].en.toLowerCase() === en.toLowerCase() && DB.words[i].zh === zh){ idx = i; break; }
+    }
+    if(idx >= 0){
+      var w = DB.words[idx];
+      gids.forEach(function(id){ if(w.groupIds.indexOf(id) < 0) w.groupIds.push(id); });
+      roots.forEach(function(r){ if(!w.roots.some(function(x){ return rootKey(x) === rootKey(r); })) w.roots.push(r); });
+      if(e.notes && !w.notes) w.notes = e.notes;
+      links.push(w); skipped++;
+      return;
+    }
+    DB.words.push({
+      id: uid(), en: en, zh: zh, roots: roots, notes: String(e.notes||''), groupIds: gids,
+      mastery: 0, reviews: 0, correct: 0, wrong: 0, lastAt: 0, createdAt: Date.now()
+    });
+    added++;
+  });
+  save();
+  return { added: added, skipped: skipped, links: links };
+}
+function removeGroup(gid){
+  DB.groups = DB.groups.filter(function(g){ return g.id !== gid; });
+  DB.words.forEach(function(w){
+    w.groupIds = w.groupIds.filter(function(id){ return id !== gid; });
+  });
+  save();
+}
+
+/* =========================================================================
+   8. 路由 / 状态
+   ========================================================================= */
+var ui = {
+  view: 'words',
+  addText: '',
+  addGroupIds: [],
+  listGroupIds: [],
+  listQuery: '',
+  listSort: 'az',
+  listLimit: 40,
+  viewMode: 'list',        // list | root
+  collapsedRoots: {},
+  batch: false,
+  selected: {},
+  study: null,
+  studyScope: 'all',
+  studyDir: 'en2zh',
+  quiz: null,
+  quizCfg: { groupIds: [], direction: 'en2zh', length: 10, scope: 'due' }
+};
+function go(view){
+  if(view !== 'words'){ ui.batch = false; ui.selected = {}; }
+  ui.view = view;
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function selectedIds(){
+  return Object.keys(ui.selected).filter(function(id){ return ui.selected[id] && wordById(id); });
+}
+function clearSelection(){ ui.selected = {}; }
+
+/* =========================================================================
+   9. 视图：词库
+   ========================================================================= */
+function viewWords(){
+  var now = Date.now();
+  var total = DB.words.length;
+  var dueN = DB.words.filter(function(w){ return isDue(w, now); }).length;
+  var today = startOfToday();
+  var touched = DB.words.filter(function(w){ return isTouchedToday(w, today); }).length;
+  var mastered = DB.words.filter(function(w){ return w.mastery === 2; }).length;
+  var rootCount = {};
+  DB.words.forEach(function(w){ rootsOf(w).forEach(function(r){ var k = rootKey(r); rootCount[k] = (rootCount[k]||0)+1; }); });
+  var rootN = Object.keys(rootCount).length;
+
+  var h = '';
+  h += '<div class="stats">' +
+       '<div class="stat"><b>'+total+'</b><span>词条总数</span></div>' +
+       '<div class="stat"><b style="color:var(--warn)">'+dueN+'</b><span>待复习</span></div>' +
+       '<div class="stat"><b style="color:var(--pri)">'+touched+'</b><span>今日已背</span></div>' +
+       '<div class="stat"><b>'+mastered+'</b><span>已熟悉</span></div>' +
+       '<div class="stat"><b>'+rootN+'</b><span>已用词根</span></div>' +
+       '<div class="stat"><b>'+DB.groups.length+'</b><span>分组</span></div>' +
+       '</div>';
+
+  if(!total){
+    h += '<div class="card"><div class="empty">' +
+      '<p style="font-size:16px;color:var(--txt);margin:0 0 6px">词库是空的</p>' +
+      '<p class="hint">本工具不预装任何词汇。先去「录入」添加你自己的单词或短语吧。<br>' +
+      '格式：<code>英语 / 汉语 / 词根 / 分组</code>，例如 <code>carditis / 心肌炎 / cardi- / 医学</code></p>' +
+      '<div class="row" style="justify-content:center;margin-top:14px">' +
+      '<button class="btn" data-nav="add">开始录入</button>' +
+      '<button class="ghost" data-act="demo">载入示例数据</button></div>' +
+      '</div></div>';
+    return h;
+  }
+
+  // ---- 分组管理 ----
+  h += '<div class="card"><h3>分组</h3>';
+  if(!DB.groups.length){
+    h += '<p class="hint">还没有分组。录入时填写分组名即可创建，也可以在下面直接新建。</p>';
+  } else {
+    h += '<div class="chips" style="margin-bottom:12px">';
+    DB.groups.forEach(function(g){
+      h += '<span class="tag"><span class="sw" style="background:'+esc(g.color)+'"></span>'+esc(g.name)+
+           ' <span class="n" style="color:var(--dim)">'+groupCount(g.id)+'</span>' +
+           ' <button class="ghost mini" style="padding:1px 7px;margin-left:2px" data-rename-group="'+esc(g.id)+'" title="重命名">✎</button>' +
+           ' <button class="danger mini" style="padding:1px 7px" data-del-group="'+esc(g.id)+'" title="删除分组">✕</button></span>';
+    });
+    h += '</div>';
+  }
+  h += '<div class="row"><input type="text" id="new-group" class="grow" style="max-width:260px" placeholder="新分组名称，如：医学 / 一周目" maxlength="24">' +
+       '<button class="ghost" data-act="add-group">新建分组</button></div></div>';
+
+  // ---- 列表 ----
+  h += '<div class="card"><h3>词条列表</h3>';
+  h += '<div class="chips" style="margin-bottom:10px">';
+  h += '<button class="chip'+(ui.listGroupIds.length===0?' on':'')+'" data-listgroup="'+ALL+'">全部 <span class="n">'+total+'</span></button>';
+  h += '<button class="chip'+(ui.listGroupIds.indexOf(NONE)>=0?' on':'')+'" data-listgroup="'+NONE+'">未分组 <span class="n">'+
+       DB.words.filter(function(w){ return !w.groupIds.length; }).length+'</span></button>';
+  DB.groups.forEach(function(g){
+    h += '<button class="chip'+(ui.listGroupIds.indexOf(g.id)>=0?' on':'')+'" data-listgroup="'+esc(g.id)+'">'+
+         '<span class="sw" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:'+esc(g.color)+'"></span>'+
+         esc(g.name)+' <span class="n">'+groupCount(g.id)+'</span></button>';
+  });
+  h += '</div>';
+
+  h += '<div class="row" style="margin-bottom:10px">' +
+       '<input type="search" id="q" class="grow" placeholder="搜索 英语 / 汉语 / 词根 / 备注" value="'+esc(ui.listQuery)+'">' +
+       '<select id="sort" style="max-width:158px">' +
+         '<option value="az">按字母 A→Z</option><option value="new">最近添加</option>' +
+         '<option value="level">掌握程度低→高</option><option value="wrong">错误最多</option>' +
+       '</select>' +
+       '<button class="ghost'+(ui.viewMode==='root'?' ':'')+'" data-act="toggle-viewmode">'+(ui.viewMode==='root'? '按词根分组 ✓':'按词根分组')+'</button>' +
+       '<button class="'+(ui.batch? 'btn':'ghost')+'" data-act="batch-toggle">'+(ui.batch? '退出批量':'批量处理')+'</button>' +
+       '<button class="ghost" data-act="export-csv">导出 CSV</button>' +
+       '</div>';
+
+  var list = DB.words.filter(function(w){
+    if(ui.listGroupIds.length){
+      var inNone = ui.listGroupIds.indexOf(NONE) >= 0;
+      var ids = ui.listGroupIds.filter(function(x){ return x !== NONE; });
+      var okG = (ids.length && w.groupIds.some(function(id){ return ids.indexOf(id)>=0; })) || (inNone && !w.groupIds.length);
+      if(!okG) return false;
+    }
+    if(ui.listQuery){
+      var q = ui.listQuery.toLowerCase();
+      var hay = (w.en+' '+w.zh+' '+w.notes+' '+rootText(w)+' '+groupLabel(w)).toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  sortWords(list, ui.listSort);
+
+  h += '<p class="hint" style="margin:0 0 10px">共 '+list.length+' 条' +
+       (ui.viewMode==='root'? '，按词根分类' : '') +
+       (list.length>ui.listLimit? '，已显示前 '+ui.listLimit+' 条（可继续加载）':'') + '</p>';
+
+  if(!list.length){
+    h += '<div class="empty">没有符合条件的词条</div>';
+    return h + '</div>';
+  }
+
+  if(ui.viewMode === 'root') h += rootGroupedHTML(list);
+  else h += flatListHTML(list);
+  h += '</div>';
+  return h;
+}
+
+function flatListHTML(list){
+  var h = '<div class="list">';
+  list.slice(0, ui.listLimit).forEach(function(w){ h += wordItemHTML(w); });
+  h += '</div>';
+  if(list.length > ui.listLimit){
+    h += '<div class="row" style="justify-content:center;margin-top:12px"><button class="ghost" data-act="more">加载更多</button></div>';
+  }
+  return h;
+}
+
+function wordItemHTML(w, hideActs){
+  var sel = !!ui.selected[w.id];
+  var gs = groupsOf(w);
+  var h = '<div class="item'+(sel?' sel':'')+'"'+(ui.batch? ' data-toggle-pick="'+esc(w.id)+'"':'')+'>';
+  if(ui.batch){
+    h += '<div class="cb'+(sel?' on':'')+'" data-pickbox="'+esc(w.id)+'">✓</div>';
+  }
+  h += '<div class="main">' +
+      '<div class="en">'+esc(w.en||'（无英语）')+'</div>' +
+      (w.zh? '<div class="zh">'+esc(w.zh)+'</div>' : '<div class="zh" style="color:var(--dim)">（未填汉语）</div>') +
+      (w.notes? '<div class="hint">'+esc(w.notes)+'</div>' : '') +
+      '<div class="meta">';
+  if(gs.length){
+    gs.forEach(function(g){
+      h += '<span class="tag"><span class="sw" style="background:'+esc(g.color)+'"></span>'+esc(g.name)+'</span>';
+    });
+  } else {
+    h += '<span class="tag" style="color:var(--dim)"><span class="sw" style="background:#3a4260"></span>未分组</span>';
+  }
+  rootsOf(w).forEach(function(r){
+    var info = rootInfo(r);
+    h += '<span class="tag root" title="'+esc(info? (info.gloss + (info.ex? ' · 例：' + info.ex : '')) : '自定义词根')+'">' +
+         '⌘ <b>'+esc(rootLabel(r))+'</b>'+(info? ' '+esc(info.gloss) : '') + '</span>';
+  });
+  h += '<span class="hint">'+masteryDots(w)+' '+masteryText(w)+' · 复习 '+w.reviews+' 次 · 对 '+w.correct+' / 错 '+w.wrong+'</span>' +
+      '</div></div>';
+  if(!hideActs && !ui.batch){
+    h += '<div class="acts">' +
+      '<button class="ghost mini" data-edit="'+esc(w.id)+'">编辑</button>' +
+      '<button class="ghost mini" data-move="'+esc(w.id)+'">分组</button>' +
+      '<button class="ghost mini" data-body="'+esc(w.id)+'">词根</button>' +
+      '<button class="ghost mini" data-reset="'+esc(w.id)+'" title="把掌握程度重置为新词">重置</button>' +
+      '<button class="danger mini" data-del="'+esc(w.id)+'">删除</button>' +
+      '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function rootGroupedHTML(list){
+  var buckets = [], map = {};
+  list.forEach(function(w){
+    var rs = rootsOf(w);
+    if(!rs.length){
+      if(!map['__none']){ map['__none'] = { label:'未标注词根', info:null, words:[] }; buckets.push(map['__none']); }
+      map['__none'].words.push(w);
+      return;
+    }
+    rs.forEach(function(r){
+      var k = rootKey(r);
+      if(!map[k]){ map[k] = { label:rootLabel(r), info:rootInfo(r), words:[] }; buckets.push(map[k]); }
+      map[k].words.push(w);
+    });
+  });
+  // 词条多的词根排前面；未标注放最后
+  buckets.sort(function(a, b){
+    if(a.label === '未标注词根') return 1;
+    if(b.label === '未标注词根') return -1;
+    return b.words.length - a.words.length || a.label.localeCompare(b.label, 'en');
+  });
+  var h = '';
+  buckets.forEach(function(b, i){
+    var open = !ui.collapsedRoots[b.label];
+    h += '<div class="rgroup">';
+    h += '<div class="rhead" data-root-toggle="'+esc(b.label)+'">' +
+         '<span style="color:var(--dim)">'+(open? '▾':'▸')+'</span>' +
+         '<span class="rk">'+esc(b.label)+'</span>' +
+         (b.info? '<span class="rm">'+esc(b.info.gloss)+(b.info.cat? ' · '+esc(b.info.cat):'')+'</span>' : '<span class="rm">自定义 / 未收录</span>') +
+         '<span class="rc">'+b.words.length+' 条'+(b.info && b.info.ex? ' · 例：'+esc(b.info.ex.split(',')[0].trim()):'')+'</span>' +
+         '</div>';
+    if(open){
+      h += '<div class="rbody"><div class="list">';
+      b.words.forEach(function(w){ h += wordItemHTML(w); });
+      h += '</div></div>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+
+/* =========================================================================
+   10. 视图：录入
+   ========================================================================= */
+function groupPickerHTML(selected, name){
+  var h = '<div class="chips" id="'+name+'">';
+  DB.groups.forEach(function(g){
+    h += '<button class="chip'+(selected.indexOf(g.id)>=0?' on':'')+'" data-gpick="'+esc(g.id)+'">'+
+         '<span class="sw" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:'+esc(g.color)+'"></span>'+
+         esc(g.name)+' <span class="n">'+groupCount(g.id)+'</span></button>';
+  });
+  h += '</div>';
+  return h;
+}
+function viewAdd(){
+  var h = '<div class="card">' +
+   '<h2>批量录入</h2>' +
+   '<p class="sub">每行一条，格式为 <b>英语 / 汉语 / 词根 / 分组</b>，分隔符只用斜杠 <span class="kbd">/</span>。<br>' +
+   '段落顺序固定：第 3 段是<b>词根</b>（直接写，如 <i>cardi-</i>、<i>-itis</i>），第 4 段是<b>分组</b>；两段都可以省略。<br>' +
+   '如果写不下第 3 段、只想给分组，就把分组用方括号括起来紧跟汉语，例如 <code>gastritis / 胃炎 [医学]</code>。<br>' +
+   '多个词根用 <span class="kbd">;</span> 分隔，多个分组用 <span class="kbd">;</span> 或顿号分隔。</p>' +
+   '<textarea id="bulk" placeholder="carditis / 心肌炎 / cardi- / 医学\nneurology / 神经病学 / neur-;-logy / [医学;词汇]\nhepatitis / 肝炎 / hepat-;itis / 医学\namoxicillin / 阿莫西林 / -cillin / 药学\nphotosynthesis / 光合作用 / photo-;synthesis / 生物\n# 以 # 开头的行会被忽略">'+esc(ui.addText)+'</textarea>' +
+   '<div class="row" style="margin-top:10px"><button class="btn" data-act="parse">解析并预览</button>' +
+   '<span class="hint">词根会作为标签保存，可在词库里按词根分类查看</span></div>' +
+  '</div>';
+
+  h += '<div class="card"><h2>单条添加</h2><p class="sub">临时想到一个词，用这里最快。词根输入框有医/药词根库的补全提示。</p>' +
+   '<div class="row"><div class="grow"><label class="f">英语</label><input type="text" id="one-en" placeholder="p.ex. cardiology" autocomplete="off"></div>' +
+   '<div class="grow"><label class="f">汉语 / 释义</label><input type="text" id="one-zh" placeholder="心脏病学"></div></div>' +
+   '<div class="row" style="margin-top:10px">' +
+     '<div class="grow acwrap" style="max-width:420px"><label class="f">词根（可留空；用 ; 分隔多个，支持前缀/别名/中文猜测补全）</label>' +
+     '<input type="text" id="one-roots" placeholder="cardi- ; -logy" autocomplete="off" spellcheck="false">' +
+     '<div id="roots-ac"></div></div>' +
+     '<div class="grow" style="max-width:220px"><label class="f">分组</label><select id="one-group"><option value="">（不分组）</option>' +
+     DB.groups.map(function(g){ return '<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>'; }).join('') + '</select></div>' +
+   '</div>' +
+   '<div class="row" style="margin-top:10px"><div class="grow"><label class="f">备注（可选：例句、易错点）</label><input type="text" id="one-notes" placeholder="cardiology is the study of the heart"></div></div>' +
+   '<div class="row" style="margin-top:12px"><button class="btn" data-act="add-one">添加</button>' +
+   '<span class="hint">按 <span class="kbd">Ctrl</span>+<span class="kbd">Enter</span> 也可添加</span></div>' +
+  '</div>';
+
+  h += '<div class="card"><h3>词根库（医学 / 药学 / 通用）</h3>' +
+    '<p class="hint">内置 '+ROOTS.length+' 个词根标签（同义拼写已合并，例如 <b>cardi-</b> 与 <b>cardio-</b> 都表示「心脏」，写哪一种都归到同一个标签）。输入时自动补全；也可以自己添加词根（见下方「自定义词根」）。下面可以随时查阅：</p>' +
+    '<div class="row"><input type="search" id="rootsearch" class="grow" placeholder="查词根 / 释义 / 例词，如 cardio、炎、心"></div>' +
+    '<div id="rootbrowse" style="margin-top:10px;max-height:320px;overflow:auto"></div>' +
+  '</div>';
+
+  h += '<div class="card"><h3>自定义词根</h3>' +
+    '<p class="hint">自己添加的词根会和内置词根一样参与：自动补全、同义拼写合并、按词根分组，以及测验的「同词根选项」。<br>' +
+    '一个词根可以有多个拼写（例如代表拼写 <b>ton-</b>，同义拼写 <b>tono-</b>），写任意一种都会归到同一个标签。</p>' +
+    '<div class="row"><button class="btn" data-croot-new="1">＋ 添加词根</button>' +
+    '<span class="hint">已添加 '+(DB.customRoots||[]).length+' 个</span></div>' +
+    customRootsHTML() +
+  '</div>';
+
+  h += '<div class="card"><h3>数据导入</h3>' +
+    '<p class="hint">支持 <b>JSON 备份</b>（本工具导出格式，含词根）、<b>CSV</b>（表头可为 <code>en,zh,root,notes,groups</code>）以及任意纯文本（每行 <code>英语 / 汉语 / 词根 / 分组</code>）。导入 JSON 时会与现有数据合并，重复词条自动跳过。</p>' +
+    '<div class="row"><button class="ghost" data-act="import-text">粘贴文本 / JSON 导入</button>' +
+    '<button class="ghost" data-act="import">选择文件导入</button>' +
+    '<button class="ghost" data-act="export">导出当前全部词库</button></div>' +
+  '</div>';
+  return h;
+}
+function rootBrowseHTML(query){
+  var q = String(query||'').trim().toLowerCase();
+  var list = allRoots().filter(function(r){
+    if(!q) return true;
+    var hay = (r.root+' '+r.variants.join(' ')+' '+r.gloss+' '+r.cat+' '+r.ex).toLowerCase();
+    return hay.indexOf(q) >= 0 || rootKey(r.root).indexOf(q.replace(/[\s\-]/g,'')) === 0;
+  });
+  if(!list.length) return '<div class="hint">没有匹配的词根</div>';
+  var h = '<div class="preview" style="max-height:none">';
+  list.slice(0, 400).forEach(function(r){
+    var alts = (VARIANT_TEXT[r.key] || []).map(rootLabel);
+    h += '<div><span class="en" style="min-width:150px">'+esc(rootLabel(r.root))+
+         (alts.length? ' <span style="color:var(--dim);font-size:12px">'+esc(alts.join(' / '))+'</span>' : '')+'</span>' +
+         '<span class="zh">'+esc(r.gloss)+' <span class="tag'+(r.custom? ' pos':'')+'">'+esc(r.cat)+'</span></span>' +
+         '<span class="hint" style="min-width:180px">'+esc(r.ex)+'</span></div>';
+  });
+  h += '</div>';
+  if(list.length > 400) h += '<p class="hint">（仅显示前 400 条，请继续输入以缩小范围）</p>';
+  return h;
+}
+/* 自定义词根列表（录入页卡片） */
+function customRootsHTML(){
+  var list = DB.customRoots || [];
+  if(!list.length){
+    return '<div class="empty" style="padding:18px 12px;margin-top:10px">还没有自定义词根。点上面的「＋ 添加词根」即可新建。</div>';
+  }
+  var h = '<div class="list" style="margin-top:10px">';
+  list.forEach(function(cr){
+    var info = rootInfo(cr.root);
+    var used = rootUsage(rootKey(cr.root));
+    var alts = (info && info.variants.length)? info.variants.map(rootLabel).join(' / ') : '';
+    h += '<div class="item"><div class="main">' +
+         '<div class="en">⌘ '+esc(rootLabel(cr.root))+(alts? ' <span style="color:var(--dim);font-size:13px;font-weight:400">'+esc(alts)+'</span>':'')+'</div>' +
+         '<div class="zh">'+esc(cr.gloss || '（未填写释义）')+'</div>' +
+         '<div class="meta"><span class="tag pos">自定义</span>' +
+         (cr.ex? '<span class="hint">例：'+esc(cr.ex)+'</span>' : '') +
+         '<span class="hint">被 '+used+' 个词使用</span></div>' +
+         '</div><div class="acts">' +
+         '<button class="ghost mini" data-croot-edit="'+esc(cr.root)+'">编辑</button>' +
+         '<button class="danger mini" data-croot-del="'+esc(cr.root)+'">删除</button>' +
+         '</div></div>';
+  });
+  h += '</div>';
+  return h;
+}
+/* 新建 / 编辑自定义词根；onDone(root) 在新建成功后回调（用于把新词根填回输入框） */
+function customRootModal(editRoot, onDone, prefillRoot){
+  var cur = null;
+  (DB.customRoots||[]).forEach(function(cr){ if(rootKey(cr.root) === rootKey(editRoot||'')) cur = cr; });
+  var editing = !!cur;
+  var initial = cur ? cur.root : String(prefillRoot||'').trim();
+  openModal(
+    '<h3>'+(editing? '编辑自定义词根' : '添加自定义词根')+'</h3>' +
+    '<p class="sub">词根会和内置库一样参与补全、同义合并、按词根分组，以及测验的「同词根选项」。</p>' +
+    '<div class="row" style="margin-top:8px">' +
+      '<div class="grow"><label class="f">代表拼写</label>' +
+      '<input type="text" id="cr-root" value="'+esc(initial)+'" placeholder="p.ex. ton- 或 -ton" autocomplete="off" spellcheck="false"></div>' +
+      '<div class="grow"><label class="f">释义（可选）</label>' +
+      '<input type="text" id="cr-gloss" value="'+esc(cur? cur.gloss : '')+'" placeholder="音调；张力"></div>' +
+    '</div>' +
+    '<label class="f" style="margin-top:10px">同义拼写（可选，用 ; 分隔）</label>' +
+    '<input type="text" id="cr-variants" value="'+esc(cur? (cur.variants||[]).join('; ') : '')+'" placeholder="tono-; toni-" autocomplete="off" spellcheck="false">' +
+    '<div class="row" style="margin-top:10px">' +
+      '<div class="grow" style="max-width:200px"><label class="f">分类</label>' +
+      '<input type="text" id="cr-cat" value="'+esc(cur? cur.cat : '自定义')+'" placeholder="自定义"></div>' +
+      '<div class="grow"><label class="f">例词（可选）</label>' +
+      '<input type="text" id="cr-ex" value="'+esc(cur? cur.ex : '')+'" placeholder="tonic, tonality"></div>' +
+    '</div>' +
+    '<p class="hint" style="margin-top:8px">同一含义写多种拼写（如 <code>cardi-</code> 与 <code>cardio-</code>），输入任意一种都会归到同一个标签。</p>' +
+    '<div class="row" style="justify-content:flex-end;margin-top:14px">' +
+    (editing? '<button class="ghost" data-x="del" style="margin-right:auto;color:var(--bad);border-color:#4a2a35">删除</button>' : '') +
+    '<button class="ghost" data-x="no">取消</button>' +
+    '<button class="btn" data-x="yes">'+(editing? '保存':'添加')+'</button></div>',
+    function(m){
+      $('#cr-root', m).focus();
+      $('[data-x=no]', m).onclick = function(){ closeModal(); if(onDone) onDone(null); };
+      if(editing) $('[data-x=del]', m).onclick = function(){
+        closeModal();
+        deleteCustomRoot(cur.root, true);
+      };
+      $('[data-x=yes]', m).onclick = function(){
+        var root = $('#cr-root', m).value.trim();
+        var variants = $('#cr-variants', m).value.split(/[;；、,，]/).map(function(s){ return s.trim(); }).filter(Boolean);
+        var gloss = $('#cr-gloss', m).value.trim();
+        var cat = $('#cr-cat', m).value.trim();
+        var ex = $('#cr-ex', m).value.trim();
+        if(!rootKey(root)){ toast('请填写词根拼写', 'warn'); return; }
+        var r = saveCustomRoot(root, variants, gloss, cat, ex, cur ? cur.root : null);
+        if(!r.ok){ toast(r.msg, 'bad'); return; }
+        closeModal(); render();
+        toast((editing? '已保存':'已添加')+'词根「'+rootLabel(r.root)+'」', 'ok');
+        if(onDone) onDone(r.root);
+      };
+    });
+}
+/* 写入 / 更新一条自定义词根 */
+function saveCustomRoot(root, variants, gloss, cat, ex, oldRoot){
+  DB.customRoots = DB.customRoots || [];
+  var newKey = rootKey(root);
+  if(!newKey) return { ok:false, msg:'词根不能为空' };
+  var builtin = ALL_BUILTIN_KEYS[newKey];
+  var conflict = DB.customRoots.some(function(cr){
+    return rootKey(cr.root) === newKey && rootKey(cr.root) !== rootKey(oldRoot||'');
+  });
+  if(builtin || conflict) return { ok:false, msg:'这个拼写已经被占用了（内置或另一个自定义词根）' };
+  // 变体也不能和其他词根撞车
+  var bad = null;
+  variants.forEach(function(v){
+    var k = rootKey(v);
+    if(k && (ALL_BUILTIN_KEYS[k] || DB.customRoots.some(function(cr){ return rootKey(cr.root) === k && rootKey(cr.root) !== newKey; }))) bad = v;
+  });
+  if(bad) return { ok:false, msg:'同义拼写「'+bad+'」已被其他词根占用' };
+  if(oldRoot && rootKey(oldRoot) !== newKey){
+    DB.customRoots = DB.customRoots.filter(function(cr){ return rootKey(cr.root) !== rootKey(oldRoot); });
+  }
+  var entry = { root: String(root).trim(), variants: variants, gloss: gloss, cat: cat, ex: ex };
+  var existing = DB.customRoots.filter(function(cr){ return rootKey(cr.root) === newKey; })[0];
+  if(existing) Object.assign(existing, entry); else DB.customRoots.push(entry);
+  rebuildRootRegistry();
+  save();
+  return { ok:true, root: entry.root };
+}
+function deleteCustomRoot(root, ask){
+  var key = rootKey(root);
+  var used = rootUsage(key);
+  var doDel = function(){
+    DB.customRoots = (DB.customRoots || []).filter(function(cr){ return rootKey(cr.root) !== key; });
+    rebuildRootRegistry();
+    save();
+    // 词条上保留原拼写（仍可作为自定义标签显示），只是不再有释义与别名
+    render();
+    toast('已删除词根「'+rootLabel(root)+'」', 'ok');
+  };
+  if(!ask){ doDel(); return; }
+  confirmBox('删除自定义词根',
+    '删除后它不再有释义与同义拼写；已标注该词根的 '+used+' 个词条会保留原拼写（作为自定义标签）。',
+    '删除', doDel);
+}
+
+/* =========================================================================
+   11. 视图：背诵
+   ========================================================================= */
+function studySetupHTML(){
+  return '<div class="card"><h2>开始背诵</h2>' +
+    '<p class="sub">选定分组后，只背这些分组里的词。范围可进一步收窄到「待复习 / 新词 / 需加强」。</p>' +
+    '<h3>分组（不选=全部 '+DB.words.length+' 条）</h3>' +
+    groupPickerHTML(ui.study ? ui.study.groupIds : [], 'study-groups') +
+    '<div class="sep"></div>' +
+    '<div class="row">' +
+      '<div class="grow" style="max-width:300px"><label class="f">范围</label><select id="study-scope">' +
+        '<option value="all">全部选中的词</option>' +
+        '<option value="due">只背待复习的</option>' +
+        '<option value="new">只背新词（未学过）</option>' +
+        '<option value="weak">只背需加强的（未熟悉或有错）</option>' +
+        '<option value="today">只背今天碰过的</option>' +
+      '</select></div>' +
+      '<div class="grow" style="max-width:300px"><label class="f">卡片方向</label><select id="study-dir">' +
+        '<option value="en2zh">英语 → 汉语</option>' +
+        '<option value="zh2en">汉语 → 英语</option>' +
+      '</select></div>' +
+    '</div>' +
+    '<div class="row" style="margin-top:14px"><button class="btn" data-act="study-start">开始</button>' +
+    '<button class="ghost" data-act="study-shuffle">随机打乱顺序</button>' +
+    '<span class="hint" id="study-pool"></span></div>' +
+  '</div>';
+}
+function viewStudy(){
+  if(!DB.words.length){
+    return '<div class="card"><div class="empty">词库还是空的，先去「录入」添加词汇。</div></div>';
+  }
+  if(!ui.study || !ui.study.queue || !ui.study.queue.length) return studySetupHTML();
+  return studyCardHTML();
+}
+function studyCardHTML(){
+  var s = ui.study;
+  var w = s.queue[s.idx];
+  var total = s.queue.length, i = s.idx;
+  var front = s.direction === 'en2zh' ? (w.en || '（无英语）') : (w.zh || '（无汉语）');
+  var rt = rootText(w);
+  var h = '';
+  h += '<div class="card">';
+  h += '<div class="quizhead">' +
+       '<span class="tag">'+esc(groupLabel(w))+'</span>' +
+       '<span class="hint">'+masteryText(w)+' · 对 '+w.correct+' / 错 '+w.wrong+'</span>' +
+       '<button class="ghost mini" data-act="study-exit">结束背诵</button>' +
+       '</div>';
+  h += '<div class="progline"><i style="width:'+Math.round(i/total*100)+'%"></i></div>' +
+       '<div class="progtext"><span>第 '+(i+1)+' / '+total+' 张</span><span>'+(s.direction==='en2zh'?'英语 → 汉语':'汉语 → 英语')+
+       ' · <button class="ghost mini" style="padding:1px 8px" data-act="study-flipdir">换方向</button></span></div>';
+
+  h += '<div class="flashwrap">';
+  if(!s.flipped){
+    h += '<div class="face front" data-act="study-flip"><span class="f-label">'+(s.direction==='en2zh'?'English':'汉语')+'</span>' +
+         '<div class="word'+(s.direction==='zh2en'?' small':'')+'">'+esc(front)+'</div>' +
+         (rt? '<div class="raghint" style="margin-top:14px">词根 '+esc(rt)+'</div>' : '') +
+         '<span class="f-tip">点击卡片 / 按 空格 查看答案</span></div>';
+  } else {
+    h += '<div class="face back"><span class="f-label">答案</span>' +
+         '<div class="scroll">' +
+           '<ul class="answer-list">' +
+           (s.direction==='en2zh'
+              ? '<li><span class="k">汉语：</span>'+esc(w.zh||'（未填写）')+'</li>'
+              : '<li><span class="k">英语：</span>'+esc(w.en||'（未填写）')+'</li>') +
+           (rt? '<li><span class="k">词根：</span>'+esc(rt)+rootGlossText(w)+'</li>' : '') +
+           (w.notes? '<li><span class="k">备注：</span>'+esc(w.notes)+'</li>' : '') +
+           '</ul>' +
+         '</div>' +
+         '<div class="notes">所属分组：'+esc(groupLabel(w))+'</div>' +
+         '<span class="f-tip">按 1/2/3 评价，或点下方按钮</span></div>';
+  }
+  h += '</div>';
+
+  h += '<div class="assign">' +
+       '<button class="ghost" data-study="bad" style="border-color:#4a2a35;color:#ffa3b1">不认识 <span class="kbd">1</span></button>' +
+       '<button class="btn warm" data-study="ok">模糊 <span class="kbd">2</span></button>' +
+       '<button class="btn" data-study="good">记得 <span class="kbd">3</span></button>' +
+       '<button class="ghost" data-study="skip">跳过 <span class="kbd">4</span></button>' +
+       '</div>';
+  h += '<p class="hint" style="margin-top:10px">评价会影响「掌握程度」与下次复习时间：记得→更久后复习；不认识→退回新词，之后优先出现。' +
+       ' 快捷键：<span class="kbd">空格</span>翻面 · <span class="kbd">1</span>/<span class="kbd">2</span>/<span class="kbd">3</span>评价 · <span class="kbd">4</span>跳过 · <span class="kbd">Esc</span>结束</p>';
+  h += '</div>';
+  return h;
+}
+function rootGlossText(w){
+  var parts = [];
+  rootsOf(w).forEach(function(r){
+    var info = rootInfo(r);
+    if(info && info.gloss) parts.push(rootLabel(r) + ' ' + info.gloss);
+  });
+  return parts.length? '（' + parts.join('；') + '）' : '';
+}
+
+/* =========================================================================
+   12. 视图：测验
+   ========================================================================= */
+function viewQuiz(){
+  if(!DB.words.length){
+    return '<div class="card"><div class="empty">词库还是空的，先去「录入」添加词汇，才能出题。</div></div>';
+  }
+  if(ui.quiz && ui.quiz.done) return quizResultHTML();
+  if(ui.quiz && ui.quiz.queue && ui.quiz.queue.length) return quizQuestionHTML();
+  return quizSetupHTML();
+}
+function quizSetupHTML(){
+  var c = ui.quizCfg;
+  var h = '<div class="card"><h2>测验设置</h2>' +
+    '<p class="sub">选择题形式。选项从词库中随机抽取，同分组优先。至少需要 4 条词才能出题。</p>' +
+    '<h3>分组（不选=全部）</h3>' + groupPickerHTML(c.groupIds, 'quiz-groups') +
+    '<div class="sep"></div>' +
+    '<div class="row">' +
+      '<div class="grow" style="max-width:240px"><label class="f">题型</label><select id="quiz-dir">' +
+        '<option value="en2zh">看英语选汉语</option>' +
+        '<option value="zh2en">看汉语选英语</option>' +
+      '</select></div>' +
+      '<div class="grow" style="max-width:240px"><label class="f">抽题范围</label><select id="quiz-scope">' +
+        '<option value="due">待复习优先</option>' +
+        '<option value="all">全部</option>' +
+        '<option value="new">只要新词</option>' +
+        '<option value="weak">只要需加强的</option>' +
+        '<option value="today">今天背过的</option>' +
+      '</select></div>' +
+      '<div class="grow" style="max-width:240px"><label class="f">题量</label><select id="quiz-len">' +
+        '<option value="10">10 题</option><option value="20">20 题</option><option value="30">30 题</option>' +
+        '<option value="0">尽可能多</option></select></div>' +
+    '</div>' +
+    '<div class="row" style="margin-top:14px"><button class="btn" data-act="quiz-start">开始测验</button>' +
+    '<span class="hint" id="quiz-pool"></span></div>' +
+  '</div>';
+  return h;
+}
+function quizQuestionHTML(){
+  var quiz = ui.quiz;
+  var item = quiz.queue[quiz.idx];
+  var opts = item.q.options;
+  var prompt = quiz.direction === 'en2zh' ? item.word.en : item.word.zh;
+  var answerText = quiz.direction === 'en2zh' ? item.word.zh : item.word.en;
+  var rt = rootText(item.word);
+  var h = '<div class="card">';
+  h += '<div class="quizhead"><span class="tag">第 '+(quiz.idx+1)+' / '+quiz.queue.length+' 题</span>' +
+       '<span class="hint">正确 '+quiz.right+' · 错误 '+quiz.wrong+'</span>' +
+       '<button class="ghost mini" data-act="quiz-exit">结束测验</button></div>';
+  h += '<div class="progline"><i style="width:'+Math.round(quiz.idx/quiz.queue.length*100)+'%"></i></div>';
+  h += '<p class="hint" style="margin:10px 0 4px">'+(quiz.direction==='en2zh'?'选出正确的汉语释义':'选出正确的英语')+'</p>';
+  h += '<div class="word'+(quiz.direction==='zh2en'?' small':'')+'" style="margin:4px 0 6px">'+esc(prompt||'（空）')+'</div>';
+  // 只在与答案无关时给词根提示：看汉语选英语时，词根能帮忙回忆而不泄露答案
+  if(rt && quiz.direction === 'zh2en') h += '<div class="raghint">词根提示：'+esc(rt)+'</div>';
+  // 说明本题选项的来源：含同一词根 / 同分组 / 全库
+  if(item.q.source === 'root'){
+    // rootShared 统计的是「除正确答案外的选项里，有几个与它共享词根」
+    var sharedN = item.q.rootShared || 0;
+    var fillN = item.q.options.length - 1 - sharedN;   // 没共享词根而被补进来的选项数
+    var msg = fillN > 0
+      ? '选项优先取同词根的词（同词根只找到 ' + sharedN + ' 个，其余补齐）'
+      : '选项都含同一词根';
+    h += '<div class="raghint" title="同义词根（如 cardi- 与 cardio-）视为同一词根">' + msg + '</div>';
+  } else if(item.q.source === 'group' && item.word.groupIds.length){
+    h += '<div class="raghint" style="opacity:.7" title="该词没有词根或同词根词不足">选项来自同一分组</div>';
+  }
+  if(item.word.notes) h += '<p class="hint" style="margin-top:6px">备注：'+esc(item.word.notes)+'</p>';
+  h += '<div class="opts">';
+  opts.forEach(function(o, i){
+    var cls = 'opt';
+    if(item.q.answered){
+      if(o.wordId === item.word.id) cls += ' correct';
+      else if(i === item.q.picked) cls += ' wrong';
+    }
+    h += '<button class="'+cls+'" data-pick="'+i+'"'+(item.q.answered? ' disabled':'')+
+         '><span class="idx">'+'ABCD'[i]+'</span><span>'+esc(o.text||'（未填写）')+'</span></button>';
+  });
+  h += '</div>';
+  if(item.q.answered){
+    var rightLetter = '?';
+    for(var oi=0; oi<opts.length; oi++){ if(opts[oi].wordId === item.word.id){ rightLetter = 'ABCD'[oi]; break; } }
+    h += '<div class="row" style="margin-top:14px;justify-content:flex-end">' +
+         '<span class="hint grow">'+(item.q.lastRight? '✅ 答对了 · 正确答案 '+rightLetter : '❌ 答错了 · 正确答案 '+rightLetter)+'</span>' +
+         '<button class="btn" data-act="quiz-next">'+(quiz.idx+1>=quiz.queue.length? '查看结果':'下一题')+' <span class="kbd">回车</span></button></div>';
+    if(!item.q.lastRight){
+      h += '<p class="hint">正确答案：<b style="color:var(--pri)">'+esc(answerText||'（未填写）')+'</b>' +
+           (item.q.picked >= 0 && opts[item.q.picked]? ' ｜ 你选的：<span style="color:var(--bad)">'+esc(opts[item.q.picked].text||'（空）')+'</span>' : '') + '</p>';
+    }
+  } else {
+    h += '<p class="hint" style="margin-top:12px">快捷键：<span class="kbd">A</span>/<span class="kbd">B</span>/<span class="kbd">C</span>/<span class="kbd">D</span> 或 <span class="kbd">1</span>~<span class="kbd">4</span> 选择 · <span class="kbd">Esc</span> 结束</p>';
+  }
+  h += '</div>';
+  return h;
+}
+function quizResultHTML(){
+  var q = ui.quiz;
+  var total = q.queue.length;
+  var right = q.right;
+  var pct = total? Math.round(right/total*100) : 0;
+  var h = '<div class="card">';
+  h += '<h2>测验结果</h2>';
+  h += '<div class="row" style="align-items:flex-end;gap:18px"><div class="score" style="color:'+(pct>=80?'var(--pri)':(pct>=60?'var(--warn)':'var(--bad)'))+'">'+pct+'%</div>' +
+       '<div class="hint">共 '+total+' 题，答对 '+right+' 题，答错 '+q.wrong+' 题。</div></div>';
+  if(q.wrongList.length){
+    h += '<div class="sep"></div><h3>错题回顾</h3><div class="list">';
+    q.wrongList.forEach(function(w){
+      var rt = rootText(w);
+      h += '<div class="item"><div class="main"><div class="en">'+esc(w.en||'（无英语）')+'</div>' +
+           '<div class="zh">'+esc(w.zh||'（未填写）')+'</div>' +
+           '<div class="meta"><span class="tag">'+esc(groupLabel(w))+'</span>' +
+           (rt? '<span class="tag root">⌘ <b>'+esc(rt)+'</b></span>':'') +
+           (w.notes? '<span class="hint">'+esc(w.notes)+'</span>':'')+'</div>' +
+           '</div></div>';
+    });
+    h += '</div>';
+  } else {
+    h += '<p class="hint" style="margin-top:10px">全部答对，太强了 👏</p>';
+  }
+  h += '<div class="row" style="margin-top:16px">' +
+       (q.wrongList.length? '<button class="btn warm" data-act="quiz-retry-wrong">只重做错题（'+q.wrongList.length+'）</button>':'') +
+       '<button class="btn" data-act="quiz-again">再来一轮</button>' +
+       '<button class="ghost" data-act="quiz-setup">回到设置</button>' +
+       '</div>';
+  h += '</div>';
+  return h;
+}
+
+/* =========================================================================
+   13. 背诵 / 测验逻辑
+   ========================================================================= */
+function startStudy(groupIds, scope, direction){
+  var pool = filterWords({ groupIds: groupIds || [], scope: scope || 'all' });
+  if(!pool.length){ toast('选中的范围里没有词', 'warn'); return; }
+  ui.study = { groupIds: groupIds || [], queue: shuffle(pool), idx:0, flipped:false,
+               direction: direction || 'en2zh', scope: scope||'all' };
+  render();
+}
+function studyAssign(result){
+  var s = ui.study; if(!s) return;
+  var w = s.queue[s.idx];
+  if(result === 'skip'){
+    s.queue.push(w);
+  } else {
+    markReview(w, result);
+    save();
+  }
+  s.flipped = false;
+  s.idx += 1;
+  if(s.idx >= s.queue.length){
+    toast('这一轮背完了：共 '+s.queue.length+' 条', 'ok');
+    ui.study = null; render(); return;
+  }
+  render();
+}
+/* 出题时把「选项文本」归一化：空释义不留空，避免多个词条因空字符串被误判为重复 */
+function optionText(w, direction){
+  var s = direction === 'en2zh' ? (w.zh || '') : (w.en || '');
+  s = String(s).trim();
+  return s || '（未填写）' + (w.en || w.zh || '');   // 加后缀保证唯一，不会是空串
+}
+/* 与某词共享任意词根的词（同义词根已在 rootKey 层归一，cardi- 与 cardio- 视为同一词根） */
+function sharesRoot(a, b){
+  var ra = rootsOf(a), rb = rootsOf(b);
+  if(!ra.length || !rb.length) return false;
+  return ra.some(function(x){
+    var kx = rootKey(x);
+    return rb.some(function(y){ return rootKey(y) === kx; });
+  });
+}
+function buildQuestion(word, direction, pool){
+  var answerText = optionText(word, direction);
+  var taken = {}, uniq = [];
+  taken[answerText.toLowerCase()] = 1;
+  uniq.push(word);
+
+  var others = pool.filter(function(x){
+    return x.id !== word.id && optionText(x, direction).toLowerCase() !== answerText.toLowerCase();
+  });
+  // 词根优先：目标词带词根时，选项优先全用「含同一词根」的词。
+  // 先在本次测验的词池里找，不足时再到全库找（仍限同词根），保证「选项都含同一词根」。
+  var hasRoot = rootsOf(word).length > 0;
+  function rootFamily(list){
+    return list.filter(function(x){
+      return x.id !== word.id &&
+             optionText(x, direction).toLowerCase() !== answerText.toLowerCase() &&
+             sharesRoot(x, word);
+    });
+  }
+  var sameRoot = hasRoot ? rootFamily(pool) : [];
+  if(hasRoot && sameRoot.length < 3){
+    var fromAll = rootFamily(DB.words);
+    fromAll.forEach(function(x){ if(sameRoot.indexOf(x) < 0) sameRoot.push(x); });
+  }
+  var sameGroup = others.filter(function(x){ return x.groupIds.some(function(id){ return word.groupIds.indexOf(id)>=0; }); });
+
+  var cand, source, forced = [];
+  if(hasRoot && sameRoot.length >= 3){
+    // 同词根词足够：直接用它们凑满 4 个选项（含正确答案）
+    source = 'root';
+    cand = [];
+    var takeRoot = pick(sameRoot, 3);
+    takeRoot.forEach(function(x){ uniq.push(x); taken[optionText(x, direction).toLowerCase()] = 1; });
+  }
+  else if(hasRoot && sameRoot.length > 0){
+    // 同词根词不足：先把它们全部放进去，再用同分组 / 全库补齐
+    source = 'root';
+    sameRoot.forEach(function(x){ uniq.push(x); taken[optionText(x, direction).toLowerCase()] = 1; });
+    cand = others.filter(function(x){ return sameRoot.indexOf(x) < 0; })
+                 .sort(function(a, b){
+                   var ga = a.groupIds.some(function(id){ return word.groupIds.indexOf(id) >= 0; })? 0 : 1;
+                   var gb = b.groupIds.some(function(id){ return word.groupIds.indexOf(id) >= 0; })? 0 : 1;
+                   return ga - gb;
+                 });
+  }
+  else if(hasRoot && sameGroup.length >= 3){ cand = sameGroup; source = 'group'; }
+  else { cand = others; source = 'all'; }
+
+  // 不足 4 个时，再随机补充（cand 为空说明已由同词根词凑满）
+  var fill = pick(cand, 3).concat(cand);
+  for(var i=0; i<fill.length && uniq.length < 4; i++){
+    var k = optionText(fill[i], direction).toLowerCase();
+    if(taken[k]) continue;
+    taken[k] = 1; uniq.push(fill[i]);
+  }
+  var guard = 0;
+  while(uniq.length < 4 && guard++ < 500){
+    var extra = DB.words[Math.floor(Math.random()*DB.words.length)];
+    if(optionText(extra, direction).toLowerCase() === answerText.toLowerCase()) continue;
+    var k2 = optionText(extra, direction).toLowerCase();
+    if(taken[k2]) continue;
+    taken[k2] = 1; uniq.push(extra);
+  }
+  var options = shuffle(uniq).map(function(x){
+    return { wordId: x.id, text: optionText(x, direction) };
+  });
+  var rootShared = uniq.filter(function(x){ return x.id !== word.id && sharesRoot(x, word); }).length;
+  return {
+    wordId: word.id,
+    options: options,
+    source: source,
+    hasRoot: hasRoot,
+    rootShared: rootShared,          // 除正确答案外，有几个选项与之共享词根
+    rootsOfWord: rootsOf(word).map(rootLabel)
+  };
+}
+function beginQuiz(words, direction){
+  if(DB.words.length < 2){ toast('词库太小，至少需要 2 条词', 'warn'); return; }
+  var pool = DB.words.slice();
+  var queue = words.map(function(w){
+    var item = buildQuestion(w, direction, pool);
+    item.picked = -1; item.answered = false; item.lastRight = false;
+    return { word: w, q: item };
+  });
+  ui.quiz = { queue: queue, idx:0, direction: direction, right:0, wrong:0, wrongList:[], done:false };
+  render();
+}
+function startQuiz(){
+  var c = ui.quizCfg;
+  var pool = filterWords({ groupIds: c.groupIds, scope: c.scope });
+  if(pool.length < 4){
+    var all = filterWords({ groupIds: c.groupIds, scope: 'all' });
+    if(all.length < 4){
+      toast('该范围内的词不足 4 条，无法出选择题', 'bad');
+      return;
+    }
+    pool = all;
+    toast('该范围不足 4 条，已改用全部选中词出题', 'warn');
+  }
+  var list = shuffle(pool);
+  if(c.length > 0) list = list.slice(0, c.length);
+  beginQuiz(list, c.direction);
+}
+function quizPick(i){
+  var quiz = ui.quiz; if(!quiz) return;
+  var item = quiz.queue[quiz.idx]; if(!item || item.q.answered) return;
+  var opt = item.q.options[i];
+  var right = !!opt && opt.wordId === item.word.id;
+  item.q.picked = i; item.q.answered = true; item.q.lastRight = right;
+  markReview(item.word, right? 'good':'bad');
+  if(right) quiz.right++; else { quiz.wrong++; quiz.wrongList.push(item.word); }
+  save();
+  render();
+}
+function quizNext(){
+  var quiz = ui.quiz; if(!quiz) return;
+  quiz.idx += 1;
+  if(quiz.idx >= quiz.queue.length){ quiz.done = true; }
+  render();
+}
+
+/* =========================================================================
+   14. 词根编辑 + 智能补全
+   ========================================================================= */
+var ac = { list: [], idx: -1, onPick: null, text: '', input: null };
+function acClose(){ var box = $('#roots-ac'); if(box) box.innerHTML = ''; ac.list = []; ac.idx = -1; ac.text = ''; ac.input = null; }
+function acRender(box, items, active, onPick, typed, input){
+  ac.list = items; ac.idx = active; ac.onPick = onPick;
+  ac.text = typed || ''; ac.input = input || null;
+  var typedLabel = String(typed||'').trim();
+  // 输入的拼写不在现有库里（既不同于任何候选，也不是某条的代表拼写）→ 提供「新建词根」
+  var known = items.some(function(r){ return rootKey(r.root) === rootKey(typedLabel); });
+  var canCreate = !!typedLabel && !known && !ALL_BUILTIN_KEYS[rootKey(typedLabel)];
+  var h = '<div class="acbox">';
+  if(!items.length){
+    h += '<div class="acempty">没有匹配的词根'+(canCreate? '，回车即可新建' : '')+'</div>';
+  }
+  items.forEach(function(r, i){
+    var alts = (VARIANT_TEXT[r.key] || []).map(rootLabel);
+    h += '<div class="acitem'+(i===active?' on':'')+'" data-acpick="'+i+'">' +
+         '<span class="r">'+esc(rootLabel(r.root))+'</span>' +
+         '<span class="m">'+esc(r.gloss)+(alts.length? ' <span style="color:var(--dim);font-size:12px">（也可写 '+esc(alts.join(' / '))+'）</span>' : '')+'</span>' +
+         '<span class="c">'+esc(r.cat)+(r.custom? ' · 自定义':'')+(r.ex? ' · '+esc(r.ex.split(',')[0].trim()) : '')+'</span>' +
+         '</div>';
+  });
+  if(canCreate){
+    h += '<div class="acitem" data-acnew="1" style="border-top:1px solid var(--line);margin-top:4px;border-radius:0 0 8px 8px">' +
+         '<span class="r" style="color:var(--pri)">＋ 新建词根</span>' +
+         '<span class="m">把「'+esc(typedLabel)+'」添加为自定义词根（可同时填释义与同义拼写）</span>' +
+         '</div>';
+  }
+  h += '</div>';
+  box.innerHTML = h;
+}
+/* 输入框里可能有多段（用 ; 分隔），只针对光标所在的那一段补全 */
+function currentSegment(input){
+  var v = input.value, pos = input.selectionStart;
+  if(pos === null || pos === undefined) pos = v.length;
+  var start = 0, end = v.length;
+  for(var i = pos - 1; i >= 0; i--){ if(/[;；,，、]/.test(v[i])){ start = i + 1; break; } }
+  for(var j = pos; j < v.length; j++){ if(/[;；,，、]/.test(v[j])){ end = j; break; } }
+  return { start: start, end: end, text: v.slice(start, end).trim() };
+}
+function acApply(input, box, value){
+  var seg = currentSegment(input);
+  var v = input.value;
+  input.value = v.slice(0, seg.start) + (seg.start>0 && !/\s$/.test(v.slice(0,seg.start))? ' ' : '') + value + v.slice(seg.end);
+  var caret = seg.start + value.length + (seg.start>0 && !/\s$/.test(v.slice(0,seg.start))? 1 : 0);
+  try{ input.setSelectionRange(caret, caret); }catch(e){}
+  input.focus();
+  acClose();
+}
+function bindRootAutocomplete(input){
+  var box = $('#roots-ac');
+  if(!input || !box) return;
+  var sync = function(){
+    var seg = currentSegment(input);
+    if(!seg.text){ acClose(); return; }
+    var matches = rootMatches(seg.text, 12);
+    acRender(box, matches, 0, function(r){
+      acApply(input, box, rootLabel(r.root));
+    }, seg.text, input);
+  };
+  input.addEventListener('input', sync);
+  input.addEventListener('focus', sync);
+  input.addEventListener('keydown', function(e){
+    if(!ac.list.length && !ac.text) return;
+    // 没有候选但有输入 → 回车直接新建词根
+    if((e.key === 'Enter' || e.key === 'Tab') && !ac.list.length && ac.text){
+      e.preventDefault();
+      var typedOnly = ac.text;
+      acClose();
+      customRootModal(null, function(createdRoot){
+        if(!createdRoot) return;
+        var seg2 = currentSegment(input);
+        var v2 = input.value;
+        var sep2 = (seg2.start>0 && !/\s$/.test(v2.slice(0,seg2.start)))? ' ' : '';
+        input.value = v2.slice(0, seg2.start) + sep2 + rootLabel(createdRoot) + v2.slice(seg2.end);
+        input.focus();
+        render();
+      }, typedOnly);
+      return;
+    }
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      if(!ac.list.length) return;
+      e.preventDefault();
+      ac.idx = (ac.idx + (e.key === 'ArrowDown'? 1 : ac.list.length - 1)) % ac.list.length;
+      acRender(box, ac.list, ac.idx, ac.onPick, ac.text, input);
+    } else if(e.key === 'Enter' || e.key === 'Tab'){
+      if(ac.idx >= 0 && ac.list[ac.idx]){ e.preventDefault(); acApply(input, box, rootLabel(ac.list[ac.idx].root)); }
+    } else if(e.key === 'Escape'){
+      acClose();
+    }
+  });
+  input.addEventListener('blur', function(){ setTimeout(acClose, 180); });
+  box.addEventListener('mousedown', function(e){
+    // 新建词根：先记下当前输入，打开新建弹窗
+    var nw = e.target.closest ? e.target.closest('[data-acnew]') : null;
+    if(nw){
+      e.preventDefault();
+      var typed = ac.text;
+      var targetInput = ac.input || input;
+      acClose();
+      customRootModal(null, function(createdRoot){
+        if(!createdRoot) return;
+        // 新建成功后，把光标所在的这一段替换成新词根
+        if(targetInput){
+          targetInput.focus();
+          var seg = currentSegment(targetInput);
+          var v = targetInput.value;
+          var sep = (seg.start>0 && !/\s$/.test(v.slice(0,seg.start)))? ' ' : '';
+          targetInput.value = v.slice(0, seg.start) + sep + rootLabel(createdRoot) + v.slice(seg.end);
+          var caret = seg.start + sep.length + rootLabel(createdRoot).length;
+          try{ targetInput.setSelectionRange(caret, caret); }catch(err){}
+        }
+        render();
+      }, typed);
+      return;
+    }
+    var el = e.target.closest ? e.target.closest('[data-acpick]') : null;
+    if(!el) return;
+    e.preventDefault();
+    var r = ac.list[Number(el.getAttribute('data-acpick'))];
+    if(r) acApply(input, box, rootLabel(r.root));
+  });
+}
+function editRoots(id){
+  var w = wordById(id); if(!w) return;
+  openModal(
+    '<h3>编辑词根标签</h3><p class="sub">'+esc(w.en||w.zh)+'</p>' +
+    '<label class="f">词根（用 ; 分隔多个，支持前缀/中文猜测补全）</label>' +
+    '<div class="acwrap"><input type="text" id="r-roots" value="'+esc(rootsOf(w).map(rootLabel).join(' ; '))+'" autocomplete="off" spellcheck="false"><div id="roots-ac"></div></div>' +
+    '<p class="hint" style="margin-top:8px">内置词根库共 '+ROOTS.length+' 条（医学 / 药学 / 通用）。未收录的词根也会原样保存，只是没有释义提示。</p>' +
+    '<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="ghost" data-x="no">取消</button>' +
+    '<button class="btn" data-x="yes">保存</button></div>',
+    function(m){
+      var input = $('#r-roots', m);
+      bindRootAutocomplete(input);
+      $('[data-x=no]', m).onclick = closeModal;
+      $('[data-x=yes]', m).onclick = function(){
+        w.roots = normalizeRoots(input.value);
+        save(); closeModal(); render(); toast('词根已更新', 'ok');
+      };
+    });
+}
+
+/* =========================================================================
+   15. 批量处理
+   ========================================================================= */
+function renderBatchBar(){
+  var root = $('#batch-root');
+  if(!ui.batch || ui.view !== 'words'){ root.innerHTML = ''; return; }
+  var ids = selectedIds();
+  var h = '<div class="batchbar">' +
+    '<span class="cnt">已选 '+ids.length+' 条</span>' +
+    '<button class="ghost mini" data-act="batch-all">'+(ids.length === visibleIds().length && ids.length? '取消全选':'全选当前结果')+'</button>' +
+    '<button class="btn blue mini" data-act="batch-group"'+(ids.length?'':' disabled')+'>改分组</button>' +
+    '<button class="ghost mini" data-act="batch-roots"'+(ids.length?'':' disabled')+'>加词根</button>' +
+    '<button class="ghost mini" data-act="batch-reset"'+(ids.length?'':' disabled')+'>重置掌握度</button>' +
+    '<button class="ghost mini" data-act="batch-export"'+(ids.length?'':' disabled')+'>导出所选</button>' +
+    '<button class="danger mini" data-act="batch-del" style="border-color:#5b2c38;background:#2a1821"'+(ids.length?'':' disabled')+'>删除</button>' +
+    '<button class="ghost mini" data-act="batch-toggle">退出</button>' +
+    '</div>';
+  root.innerHTML = h;
+}
+function currentList(){
+  var list = DB.words.filter(function(w){
+    if(ui.listGroupIds.length){
+      var inNone = ui.listGroupIds.indexOf(NONE) >= 0;
+      var ids = ui.listGroupIds.filter(function(x){ return x !== NONE; });
+      var okG = (ids.length && w.groupIds.some(function(id){ return ids.indexOf(id)>=0; })) || (inNone && !w.groupIds.length);
+      if(!okG) return false;
+    }
+    if(ui.listQuery){
+      var q = ui.listQuery.toLowerCase();
+      var hay = (w.en+' '+w.zh+' '+w.notes+' '+rootText(w)+' '+groupLabel(w)).toLowerCase();
+      if(hay.indexOf(q) < 0) return false;
+    }
+    return true;
+  });
+  return sortWords(list, ui.listSort);
+}
+function visibleIds(){ return currentList().map(function(w){ return w.id; }); }
+function batchGroupModal(){
+  var ids = selectedIds(); if(!ids.length) return;
+  ui.batchMode = ui.batchMode || 'add';
+  ui.batchGroups = ui.batchGroups || [];
+  var mode = ui.batchMode;
+  openModal(
+    '<h3>把选中的 '+ids.length+' 条移到分组</h3>' +
+    '<p class="sub">当前模式：'+(mode === 'replace'? '替换原有分组' : '在原有分组的基础上追加')+'</p>' +
+    '<div class="chips" id="bg-chips">' + (DB.groups.length? DB.groups.map(function(g){
+      return '<button class="chip'+(ui.batchGroups.indexOf(g.id)>=0? ' on':'')+'" data-bx="chip" data-mgpick="'+esc(g.id)+'">'+esc(g.name)+'</button>';
+    }).join('') : '<span class="hint">还没有分组，请在下面新建</span>') + '</div>' +
+    '<div class="row" style="margin-top:12px"><input type="text" id="bg-new" class="grow" placeholder="新建分组名">' +
+    '<button class="ghost" data-bx="new">新建并选中</button></div>' +
+    '<div class="row" style="justify-content:flex-end;margin-top:16px">' +
+    '<button class="ghost" data-bx="mode">'+(mode === 'replace'? '改为追加模式':'改为替换模式')+'</button>' +
+    '<button class="ghost" data-bx="clear">清空分组</button>' +
+    '<button class="ghost" data-x="no">取消</button>' +
+    '<button class="btn" data-x="yes">应用</button></div>',
+    function(m){
+      $('[data-x=no]', m).onclick = closeModal;
+      $('[data-x=yes]', m).onclick = function(){
+        var sel = ui.batchGroups.slice(), md = ui.batchMode;
+        ids.forEach(function(id){
+          var w = wordById(id); if(!w) return;
+          if(md === 'replace') w.groupIds = sel.slice();
+          else sel.forEach(function(gid){ if(w.groupIds.indexOf(gid) < 0) w.groupIds.push(gid); });
+        });
+        save(); closeModal(); clearSelection(); ui.batchGroups = [];
+        render();
+        toast((md === 'replace'? '已替换':'已追加')+'分组：'+ids.length+' 条', 'ok');
+      };
+    });
+}
+function batchAddRootsModal(){
+  var ids = selectedIds(); if(!ids.length) return;
+  openModal('<h3>给选中的 '+ids.length+' 条加词根</h3>' +
+    '<p class="sub">输入的词根会追加到这些词条上（已存在的不会重复）。</p>' +
+    '<div class="acwrap"><input type="text" id="br-roots" placeholder="cardi- ; -itis" autocomplete="off" spellcheck="false"><div id="roots-ac"></div></div>' +
+    '<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="ghost" data-x="no">取消</button>' +
+    '<button class="btn" data-x="yes">应用到 '+ids.length+' 条</button></div>',
+    function(m){
+      var input = $('#br-roots', m);
+      bindRootAutocomplete(input);
+      $('[data-x=no]', m).onclick = closeModal;
+      $('[data-x=yes]', m).onclick = function(){
+        var rs = normalizeRoots(input.value);
+        if(!rs.length){ toast('先输入词根', 'warn'); return; }
+        ids.forEach(function(id){
+          var w = wordById(id); if(!w) return;
+          rs.forEach(function(r){ if(!w.roots.some(function(x){ return rootKey(x) === rootKey(r); })) w.roots.push(r); });
+        });
+        save(); closeModal(); clearSelection(); render();
+        toast('已给 '+ids.length+' 条添加词根', 'ok');
+      };
+    });
+}
+/* 批量“改分组”弹窗里的按钮：走集中式事件委托，避免依赖弹窗内的闭包绑定 */
+function batchModalAction(el){
+  var ids = selectedIds();
+  var bx = el.getAttribute('data-bx');
+  if(bx === 'chip'){
+    var gid = el.getAttribute('data-mgpick');
+    if(!gid) return;
+    ui.batchGroups = ui.batchGroups || [];
+    var k = ui.batchGroups.indexOf(gid);
+    if(k >= 0){ ui.batchGroups.splice(k,1); el.classList.remove('on'); }
+    else { ui.batchGroups.push(gid); el.classList.add('on'); }
+    return;
+  }
+  if(bx === 'new'){
+    var inp = $('#bg-new');
+    var nm = inp ? inp.value.trim() : '';
+    if(!nm){ toast('请输入分组名','warn'); return; }
+    var g = ensureGroup(nm); save();
+    if(g){
+      ui.batchGroups = ui.batchGroups || [];
+      if(ui.batchGroups.indexOf(g.id) < 0) ui.batchGroups.push(g.id);
+    }
+    closeModal(); batchGroupModal();
+    toast('已新建并选中「'+nm+'」','ok');
+    return;
+  }
+  if(bx === 'mode'){
+    ui.batchMode = (ui.batchMode === 'replace') ? 'add' : 'replace';
+    closeModal(); batchGroupModal();
+    return;
+  }
+  if(bx === 'clear'){
+    if(!ids.length) return;
+    confirmBox('清空分组', '选中的 '+ids.length+' 条会被移出所有分组（词条保留）。', '清空', function(){
+      ids.forEach(function(id){ var w = wordById(id); if(w) w.groupIds = []; });
+      save(); clearSelection(); render(); toast('已清空 '+ids.length+' 条的分组','ok');
+    });
+    return;
+  }
+}
+function batchReset(){
+  var ids = selectedIds(); if(!ids.length) return;
+  confirmBox('重置掌握度', '选中的 '+ids.length+' 条会被重置为「新词」，复习/对错统计保留。', '重置', function(){
+    ids.forEach(function(id){
+      var w = wordById(id);
+      if(w){ w.mastery = 0; w.wrong = 0; }
+    });
+    save(); clearSelection(); render(); toast('已重置 '+ids.length+' 条', 'ok');
+  });
+}
+function batchDelete(){
+  var ids = selectedIds(); if(!ids.length) return;
+  confirmBox('删除词条', '选中的 '+ids.length+' 条将被永久删除，无法恢复。', '删除 '+ids.length+' 条', function(){
+    DB.words = DB.words.filter(function(w){ return ids.indexOf(w.id) < 0; });
+    save(); clearSelection(); render(); toast('已删除 '+ids.length+' 条', 'ok');
+  });
+}
+function batchExport(){
+  var ids = selectedIds(); if(!ids.length) return;
+  var picked = DB.words.filter(function(w){ return ids.indexOf(w.id) >= 0; });
+  download('英语单词本_选中'+picked.length+'条_'+stamp()+'.json',
+           JSON.stringify({ version:1, exportedAt:new Date().toISOString(), groups:DB.groups, words:picked }, null, 2),
+           'application/json');
+  toast('已导出选中的 '+picked.length+' 条', 'ok');
+}
+
+/* =========================================================================
+   16. 渲染 + 事件
+   ========================================================================= */
+function render(){
+  $$('#tabs button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-nav') === ui.view);
+  });
+  var v = '';
+  if(ui.view === 'words') v = viewWords();
+  else if(ui.view === 'add') v = viewAdd();
+  else if(ui.view === 'study') v = viewStudy();
+  else if(ui.view === 'quiz') v = viewQuiz();
+  $('#view').innerHTML = v;
+  renderAlert();
+  renderBatchBar();
+
+  if(ui.view === 'study' && ui.study && !(ui.study.queue||[]).length){
+    var s = $('#study-scope'); if(s) s.value = ui.studyScope || 'all';
+    var sd = $('#study-dir'); if(sd) sd.value = ui.studyDir || 'en2zh';
+  }
+  if(ui.view === 'quiz'){
+    var d = $('#quiz-dir'), sc = $('#quiz-scope'), ln = $('#quiz-len');
+    if(d) d.value = ui.quizCfg.direction;
+    if(sc) sc.value = ui.quizCfg.scope;
+    if(ln) ln.value = String(ui.quizCfg.length);
+  }
+  if(ui.view === 'words'){
+    var so = $('#sort'); if(so) so.value = ui.listSort;
+  }
+  if(ui.view === 'add'){
+    var rb = $('#rootbrowse');
+    if(rb) rb.innerHTML = rootBrowseHTML('');
+    var ri = $('#rootsearch');
+    if(ri) ri.value = '';
+    bindRootAutocomplete($('#one-roots'));
+  }
+  updatePoolHint();
+}
+function updatePoolHint(){
+  var el = $('#study-pool');
+  if(el && ui.view === 'study'){
+    var scope = ($('#study-scope') && $('#study-scope').value) || ui.studyScope || 'all';
+    var pool = filterWords({ groupIds: ui.study? ui.study.groupIds : [], scope: scope });
+    el.textContent = '当前范围共 '+pool.length+' 条';
+  }
+  var el2 = $('#quiz-pool');
+  if(el2 && ui.view === 'quiz'){
+    var pool2 = filterWords({ groupIds: ui.quizCfg.groupIds, scope: ui.quizCfg.scope });
+    el2.textContent = '当前范围共 '+pool2.length+' 条'+(pool2.length<4? '（不足 4 条，会自动改用全部选中词）':'');
+  }
+}
+function toggleFromList(arr, id){
+  var i = arr.indexOf(id);
+  if(i >= 0) arr.splice(i,1); else arr.push(id);
+  return arr;
+}
+
+document.addEventListener('click', function(e){
+  var el = e.target.closest ? e.target.closest(
+    '[data-nav],[data-act],[data-listgroup],[data-gpick],[data-study],[data-pick],[data-edit],[data-del],' +
+    '[data-move],[data-body],[data-reset],[data-del-group],[data-rename-group],[data-root-toggle],[data-toggle-pick],[data-pickbox],[data-acpick],[data-bx],' +
+    '[data-croot-new],[data-croot-edit],[data-croot-del]'
+  ) : null;
+  if(!el) return;
+
+  // 词根补全项由绑定的 keydown/mousedown 处理，这里避免重复触发
+  if(el.hasAttribute('data-acpick')) return;
+
+  // 自定义词根的增删改（弹窗内外都能用）
+  var crn = el.getAttribute('data-croot-new');
+  if(crn !== null && crn !== undefined && el.hasAttribute('data-croot-new')){
+    customRootModal(null, function(){ render(); }); return;
+  }
+  var cre = el.getAttribute('data-croot-edit');
+  if(cre){ customRootModal(cre, function(){ render(); }); return; }
+  var crd = el.getAttribute('data-croot-del');
+  if(crd){ deleteCustomRoot(crd, true); return; }
+
+  // 批量“改分组”弹窗内的交互：集中处理，不依赖弹窗内的闭包
+  if(el.hasAttribute('data-bx') || (el.hasAttribute('data-mgpick') && $('.mask'))){ batchModalAction(el); return; }
+
+  // 弹窗内的交互（分组选择、词根补全等）由各自绑定的监听器处理，
+  // 这里只放行仍在弹窗里生效的按钮/动作，避免误触发主视图状态与整页重绘
+  var inModal = !!$('.mask');
+  if(inModal && !el.hasAttribute('data-act') && !el.hasAttribute('data-nav')) return;
+
+  var nav = el.getAttribute('data-nav');
+  if(nav){ go(nav); return; }
+
+  // 批量模式下点击整行即选中
+  var tp = el.getAttribute('data-toggle-pick');
+  if(tp){
+    if(ui.selected[tp]) delete ui.selected[tp]; else ui.selected[tp] = 1;
+    var keepScroll = window.scrollY;
+    render();
+    window.scrollTo(0, keepScroll);
+    return;
+  }
+  var pb = el.getAttribute('data-pickbox');
+  if(pb){
+    if(ui.selected[pb]) delete ui.selected[pb]; else ui.selected[pb] = 1;
+    var ks = window.scrollY;
+    render();
+    window.scrollTo(0, ks);
+    return;
+  }
+
+  var rt = el.getAttribute('data-root-toggle');
+  if(rt){
+    if(ui.collapsedRoots[rt]) delete ui.collapsedRoots[rt];
+    else ui.collapsedRoots[rt] = 1;
+    var ys = window.scrollY; render(); window.scrollTo(0, ys);
+    return;
+  }
+
+  var lg = el.getAttribute('data-listgroup');
+  if(lg){
+    if(lg === ALL) ui.listGroupIds = [];
+    else {
+      if(ui.listGroupIds.indexOf(NONE) >= 0) ui.listGroupIds = [];
+      toggleFromList(ui.listGroupIds, lg);
+    }
+    ui.listLimit = 40; render(); return;
+  }
+
+  var gp = el.getAttribute('data-gpick');
+  if(gp){
+    if(ui.view === 'add'){ toggleFromList(ui.addGroupIds, gp); }
+    else if(ui.view === 'study'){
+      if(ui.study && ui.study.queue && ui.study.queue.length) return;
+      if(!ui.studySetupSel) ui.studySetupSel = ui.study? ui.study.groupIds.slice() : [];
+      toggleFromList(ui.studySetupSel, gp);
+      ui.study = { groupIds: ui.studySetupSel.slice(), queue:null, idx:0, flipped:false, direction:'en2zh', scope: ui.studyScope||'all' };
+    }
+    else if(ui.view === 'quiz'){ toggleFromList(ui.quizCfg.groupIds, gp); }
+    render();
+    return;
+  }
+
+  var st = el.getAttribute('data-study');
+  if(st){
+    if(st === 'flip'){ ui.study.flipped = !ui.study.flipped; render(); }
+    else studyAssign(st);
+    return;
+  }
+
+  if(el.hasAttribute('data-pick')){ quizPick(Number(el.getAttribute('data-pick'))); return; }
+
+  var ed = el.getAttribute('data-edit'); if(ed){ editWord(ed); return; }
+  var mv = el.getAttribute('data-move'); if(mv){ moveWord(mv); return; }
+  var bd = el.getAttribute('data-body'); if(bd){ editRoots(bd); return; }
+  var rs = el.getAttribute('data-reset');
+  if(rs){
+    var w0 = wordById(rs);
+    if(w0){ w0.mastery = 0; w0.wrong = 0; save(); render(); toast('已重置为新词','ok'); }
+    return;
+  }
+  var dl = el.getAttribute('data-del');
+  if(dl){
+    var w1 = wordById(dl);
+    if(!w1) return;
+    confirmBox('删除词条', '「'+(w1.en||w1.zh)+'」将被删除，无法恢复。', '删除', function(){
+      DB.words = DB.words.filter(function(x){ return x.id !== dl; });
+      save(); render(); toast('已删除','ok');
+    });
+    return;
+  }
+  var dg = el.getAttribute('data-del-group');
+  if(dg){
+    var g1 = groupById(dg); if(!g1) return;
+    confirmBox('删除分组', '分组「'+g1.name+'」将被删除，组内 '+groupCount(dg)+' 条词会保留但变为未分组。', '删除分组', function(){
+      removeGroup(dg);
+      ui.listGroupIds = ui.listGroupIds.filter(function(x){ return x !== dg; });
+      render(); toast('分组已删除','ok');
+    });
+    return;
+  }
+  var rg = el.getAttribute('data-rename-group');
+  if(rg){
+    var g2 = groupById(rg); if(!g2) return;
+    openModal('<h3>重命名分组</h3><input type="text" id="r-name" value="'+esc(g2.name)+'" style="margin-top:10px">' +
+      '<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="ghost" data-x="no">取消</button><button class="btn" data-x="yes">保存</button></div>',
+      function(m){
+        $('[data-x=no]', m).onclick = closeModal;
+        $('[data-x=yes]', m).onclick = function(){
+          var nn = $('#r-name', m).value.trim();
+          if(!nn){ toast('名称不能为空','warn'); return; }
+          if(DB.groups.some(function(g){ return g.name === nn && g.id !== g2.id; })){ toast('已有同名分组','warn'); return; }
+          g2.name = nn; save(); closeModal(); render(); toast('已重命名','ok');
+        };
+      });
+    return;
+  }
+
+  var act = el.getAttribute('data-act');
+  if(!act) return;
+  switch(act){
+    case 'toggle-viewmode':
+      ui.viewMode = ui.viewMode === 'root'? 'list' : 'root';
+      render(); break;
+    case 'batch-toggle':
+      ui.batch = !ui.batch;
+      if(!ui.batch) clearSelection();
+      render(); break;
+    case 'batch-all': {
+      var vis = visibleIds();
+      var allSel = selectedIds().length === vis.length && vis.length > 0;
+      clearSelection();
+      if(!allSel) vis.forEach(function(id){ ui.selected[id] = 1; });
+      var y = window.scrollY; render(); window.scrollTo(0, y);
+      break;
+    }
+    case 'batch-group': batchGroupModal(); break;
+    case 'batch-roots': batchAddRootsModal(); break;
+    case 'batch-reset': batchReset(); break;
+    case 'batch-del': batchDelete(); break;
+    case 'batch-export': batchExport(); break;
+    case 'study-flip':
+      if(ui.study){ ui.study.flipped = !ui.study.flipped; render(); }
+      break;
+    case 'study-flipdir':
+      ui.study.direction = ui.study.direction === 'en2zh'? 'zh2en' : 'en2zh';
+      render(); break;
+    case 'study-exit':
+      confirmBox('结束背诵','本轮进度（已评价的部分）会保留。','结束', function(){ ui.study = null; render(); });
+      break;
+    case 'study-start':
+      ui.studyScope = $('#study-scope')? $('#study-scope').value : 'all';
+      ui.studyDir = $('#study-dir')? $('#study-dir').value : 'en2zh';
+      startStudy((ui.study? ui.study.groupIds : []) || [], ui.studyScope, ui.studyDir);
+      break;
+    case 'study-shuffle':
+      if(ui.study && ui.study.queue){ ui.study.queue = shuffle(ui.study.queue); ui.study.idx = 0; render(); toast('已打乱顺序','ok'); }
+      else toast('先点「开始」','warn');
+      break;
+    case 'study-here':
+      ui.study = { groupIds: ui.listGroupIds.filter(function(x){ return x !== NONE; }), queue:null, idx:0, flipped:false, direction:'en2zh', scope:'all' };
+      ui.studySetupSel = ui.study.groupIds.slice();
+      go('study');
+      break;
+    case 'quiz-start':
+      if($('#quiz-dir')) ui.quizCfg.direction = $('#quiz-dir').value;
+      if($('#quiz-scope')) ui.quizCfg.scope = $('#quiz-scope').value;
+      if($('#quiz-len')) ui.quizCfg.length = Number($('#quiz-len').value)||0;
+      startQuiz(); break;
+    case 'quiz-next': quizNext(); break;
+    case 'quiz-exit':
+      confirmBox('结束测验','当前成绩将不计入结果页。','结束', function(){ ui.quiz = null; render(); });
+      break;
+    case 'quiz-again': {
+      var words = ui.quiz.queue.map(function(x){ return x.word; });
+      beginQuiz(shuffle(words), ui.quiz.direction); break;
+    }
+    case 'quiz-retry-wrong': {
+      var ws = ui.quiz.wrongList.slice();
+      beginQuiz(shuffle(ws), ui.quiz.direction); break;
+    }
+    case 'quiz-setup': ui.quiz = null; render(); break;
+    case 'add-group': {
+      var inp = $('#new-group'); var nm = inp? inp.value.trim() : '';
+      if(!nm){ toast('请输入分组名','warn'); break; }
+      var g = ensureGroup(nm); save(); render();
+      toast(g? '已创建分组「'+g.name+'」' : '创建失败', 'ok');
+      break;
+    }
+    case 'parse': {
+      ui.addText = $('#bulk')? $('#bulk').value : '';
+      var entries = parseLines(ui.addText);
+      if(!entries.length){ toast('没有解析到内容，检查一下格式','warn'); break; }
+      previewImport(entries, { forceGroups: ui.addGroupIds });
+      break;
+    }
+    case 'add-one': {
+      var en = $('#one-en')? $('#one-en').value.trim() : '';
+      var zh = $('#one-zh')? $('#one-zh').value.trim() : '';
+      var roots = normalizeRoots($('#one-roots')? $('#one-roots').value : '');
+      var nt = $('#one-notes')? $('#one-notes').value.trim() : '';
+      var gid = $('#one-group')? $('#one-group').value : '';
+      if(!en && !zh){ toast('至少填写英语或汉语','warn'); break; }
+      var gn = gid? [groupById(gid).name] : [];
+      var r = addEntries([{ en:en, zh:zh, roots:roots, notes:nt, groupNames:gn }]);
+      render();
+      toast(r.added? '已添加' : '已存在，未重复添加', r.added? 'ok':'warn');
+      break;
+    }
+    case 'more': ui.listLimit += 60; render(); break;
+    case 'export': doExport(); break;
+    case 'export-csv': exportCSV(); break;
+    case 'import': $('#file-in').click(); break;
+    case 'import-text':
+      openModal('<h3>粘贴导入</h3><p class="sub">支持每行「英语 / 汉语 / 词根 / 分组」，也支持直接粘贴本工具导出的 JSON。</p>' +
+        '<textarea id="paste-box" placeholder="carditis / 心肌炎 / cardi- / 医学&#10;hepatitis / 肝炎 / hepat-;itis" style="min-height:180px"></textarea>' +
+        '<div class="row" style="justify-content:flex-end;margin-top:14px"><button class="ghost" data-x="no">取消</button>' +
+        '<button class="btn" data-x="yes">解析</button></div>',
+        function(m){
+          $('[data-x=no]', m).onclick = closeModal;
+          $('[data-x=yes]', m).onclick = function(){
+            var txt = $('#paste-box', m).value;
+            closeModal();
+            handleImportText(txt, '');
+          };
+        });
+      break;
+    case 'demo':
+      confirmBox('载入示例数据', '会添加约 20 条示例词汇（含词根）与 3 个分组，方便你先体验。', '载入', function(){
+        loadDemo(); render(); toast('示例数据已载入','ok');
+      });
+      break;
+  }
+});
+
+document.addEventListener('input', function(e){
+  var t = e.target;
+  if(t.id === 'q'){
+    ui.listQuery = t.value;
+    ui.listLimit = 40;
+    var pos = t.selectionStart;
+    render();
+    var q2 = $('#q');
+    if(q2){ q2.focus(); try{ q2.setSelectionRange(pos,pos); }catch(err){} }
+  } else if(t.id === 'bulk'){
+    ui.addText = t.value;
+  } else if(t.id === 'rootsearch'){
+    var rb = $('#rootbrowse');
+    if(rb) rb.innerHTML = rootBrowseHTML(t.value);
+  } else if(t.id === 'study-scope'){
+    ui.studyScope = t.value;
+    updatePoolHint();
+  } else if(t.id === 'study-dir'){
+    ui.studyDir = t.value;
+  } else if(t.id === 'quiz-scope'){
+    ui.quizCfg.scope = t.value;
+    updatePoolHint();
+  } else if(t.id === 'quiz-dir'){
+    ui.quizCfg.direction = t.value;
+  }
+});
+document.addEventListener('change', function(e){
+  var t = e.target;
+  if(t.id === 'sort'){ ui.listSort = t.value; ui.listLimit = 40; render(); return; }
+  if(t.id === 'quiz-len') ui.quizCfg.length = Number(t.value)||0;
+  if(t.id === 'quiz-dir') ui.quizCfg.direction = t.value;
+  if(t.id === 'quiz-scope'){ ui.quizCfg.scope = t.value; updatePoolHint(); }
+  if(t.id === 'study-scope'){ ui.studyScope = t.value; updatePoolHint(); }
+  if(t.id === 'study-dir'){ ui.studyDir = t.value; }
+});
+document.addEventListener('keydown', function(e){
+  var tag = (e.target.tagName||'').toLowerCase();
+  var typing = tag === 'input' || tag === 'textarea' || tag === 'select';
+  if(e.key === 'Escape'){
+    if($('#roots-ac') && $('#roots-ac').innerHTML){ acClose(); return; }
+    if($('.mask')){ closeModal(); return; }
+    if(ui.batch){ ui.batch = false; clearSelection(); render(); return; }
+    if(ui.view === 'study' && ui.study && ui.study.queue && ui.study.queue.length){ ui.study = null; render(); return; }
+    return;
+  }
+  if(typing){
+    if(e.key === 'Enter' && (e.ctrlKey || e.metaKey) && ui.view === 'add'){
+      var b = $('[data-act=add-one]'); if(b) b.click();
+    }
+    return;
+  }
+  if(ui.view === 'study' && ui.study && ui.study.queue && ui.study.queue.length){
+    if(e.key === ' '){ e.preventDefault(); ui.study.flipped = !ui.study.flipped; render(); return; }
+    if(e.key === '1'){ studyAssign('bad'); return; }
+    if(e.key === '2'){ studyAssign('ok'); return; }
+    if(e.key === '3'){ studyAssign('good'); return; }
+    if(e.key === '4'){ studyAssign('skip'); return; }
+  }
+  if(ui.view === 'quiz' && ui.quiz && ui.quiz.queue && ui.quiz.queue.length){
+    if(ui.quiz.done){ if(e.key === 'Enter') { ui.quiz = null; render(); } return; }
+    var curItem = ui.quiz.queue[ui.quiz.idx];
+    if(!curItem) return;
+    if(!curItem.q.answered){
+      var m = /^[a-dA-D]$/.test(e.key)? 'ABCD'.indexOf(e.key.toUpperCase()) : (/^[1-4]$/.test(e.key)? Number(e.key)-1 : -1);
+      if(m >= 0){ quizPick(m); }
+    } else if(e.key === 'Enter'){ quizNext(); }
+  }
+});
+$('#file-in').addEventListener('change', function(e){
+  var f = e.target.files && e.target.files[0];
+  if(!f) return;
+  readFile(f, function(text){
+    if(/\.json$/i.test(f.name) || looksJSON(text)) importJSONText(text);
+    else handleImportText(text, f.name);
+  });
+  e.target.value = '';
+});
+
+/* =========================================================================
+   17. 编辑 / 导入导出 / 预览
+   ========================================================================= */
+function editWord(id){
+  var w = wordById(id); if(!w) return;
+  openModal(
+    '<h3>编辑词条</h3>' +
+    '<div class="row" style="margin-top:10px"><div class="grow"><label class="f">英语</label><input type="text" id="e-en" value="'+esc(w.en)+'"></div>' +
+    '<div class="grow"><label class="f">汉语 / 释义</label><input type="text" id="e-zh" value="'+esc(w.zh)+'"></div></div>' +
+    '<div class="row" style="margin-top:10px">' +
+    '<div class="grow"><label class="f">词根（用 ; 分隔，支持补全）</label>' +
+    '<div class="acwrap"><input type="text" id="e-roots" value="'+esc(rootsOf(w).map(rootLabel).join(' ; '))+'" autocomplete="off" spellcheck="false"><div id="roots-ac"></div></div></div></div>' +
+    '<label class="f" style="margin-top:10px">备注</label><input type="text" id="e-notes" value="'+esc(w.notes)+'">' +
+    '<label class="f" style="margin-top:10px">分组（可多选）</label>' +
+    '<div class="chips" id="e-groups">' + DB.groups.map(function(g){
+      return '<button class="chip'+(w.groupIds.indexOf(g.id)>=0?' on':'')+'" data-gpick="'+esc(g.id)+'">'+esc(g.name)+'</button>';
+    }).join('') + (DB.groups.length? '' : '<span class="hint">暂无分组</span>') + '</div>' +
+    '<label class="f" style="margin-top:10px">新建分组并归入</label>' +
+    '<input type="text" id="e-newgroup" placeholder="分组名（留空则忽略）">' +
+    '<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="ghost" data-x="no">取消</button>' +
+    '<button class="btn" data-x="yes">保存</button></div>',
+    function(m){
+      var sel = w.groupIds.slice();
+      bindRootAutocomplete($('#e-roots', m));
+      m.addEventListener('click', function(e){
+        var b = e.target.closest ? e.target.closest('[data-gpick]') : null;
+        if(!b) return;
+        var id2 = b.getAttribute('data-gpick');
+        var k = sel.indexOf(id2);
+        if(k >= 0){ sel.splice(k,1); b.classList.remove('on'); } else { sel.push(id2); b.classList.add('on'); }
+      });
+      $('[data-x=no]', m).onclick = closeModal;
+      $('[data-x=yes]', m).onclick = function(){
+        w.en = $('#e-en', m).value.trim();
+        w.zh = $('#e-zh', m).value.trim();
+        w.roots = normalizeRoots($('#e-roots', m).value);
+        w.notes = $('#e-notes', m).value.trim();
+        var nn = $('#e-newgroup', m).value.trim();
+        if(nn){ var g = ensureGroup(nn); if(g && sel.indexOf(g.id)<0) sel.push(g.id); }
+        w.groupIds = sel;
+        save(); closeModal(); render(); toast('已保存', 'ok');
+      };
+    });
+}
+function moveWord(id){
+  var w = wordById(id); if(!w) return;
+  openModal(
+    '<h3>调整分组</h3><p class="sub">'+esc(w.en||w.zh)+'</p>' +
+    '<div class="chips" id="m-groups">' + DB.groups.map(function(g){
+      return '<button class="chip'+(w.groupIds.indexOf(g.id)>=0?' on':'')+'" data-gpick="'+esc(g.id)+'">'+
+        '<span style="width:8px;height:8px;border-radius:50%;background:'+esc(g.color)+';display:inline-block"></span>'+esc(g.name)+'</button>';
+    }).join('') + (DB.groups.length? '' : '<span class="hint">还没有分组，请在下面新建</span>') + '</div>' +
+    '<div class="row" style="margin-top:12px"><input type="text" id="m-new" placeholder="新建分组名" class="grow">' +
+    '<button class="ghost" data-x="new">新建</button></div>' +
+    '<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="ghost" data-x="no">取消</button>' +
+    '<button class="btn" data-x="yes">保存</button></div>',
+    function(m){
+      var sel = w.groupIds.slice();
+      m.addEventListener('click', function(e){
+        var b = e.target.closest ? e.target.closest('[data-gpick]') : null;
+        if(!b) return;
+        var id2 = b.getAttribute('data-gpick');
+        var k = sel.indexOf(id2);
+        if(k >= 0){ sel.splice(k,1); b.classList.remove('on'); } else { sel.push(id2); b.classList.add('on'); }
+      });
+      $('[data-x=new]', m).onclick = function(){
+        var nn = $('#m-new', m).value.trim(); if(!nn) return;
+        var g = ensureGroup(nn); save();
+        if(g && sel.indexOf(g.id) < 0) sel.push(g.id);
+        closeModal(); moveWord(id);
+      };
+      $('[data-x=no]', m).onclick = closeModal;
+      $('[data-x=yes]', m).onclick = function(){ w.groupIds = sel; save(); closeModal(); render(); toast('分组已更新','ok'); };
+    });
+}
+function entryPreviewHTML(list, dupMap){
+  var h = '<div class="preview">';
+  list.forEach(function(e, i){
+    var dup = dupMap[i];
+    var roots = (e.roots||[]).map(rootLabel);
+    h += '<div><span class="en">'+esc(e.en||'（无英语）')+'</span>' +
+         '<span class="zh">'+esc(e.zh||'（无汉语）')+
+         roots.map(function(r){
+           var info = rootInfo(r);
+           return ' <span class="tag root">⌘ <b>'+esc(r)+'</b>'+(info? ' '+esc(info.gloss):'')+'</span>';
+         }).join('') +
+         (e.groupNames && e.groupNames.length? ' <span class="tag">'+esc(e.groupNames.join(' / '))+'</span>':'') +
+         (dup? ' <span class="dup">已存在，将只补充分组/词根</span>':'') + '</span></div>';
+  });
+  h += '</div>';
+  return h;
+}
+function previewImport(entries, opts){
+  opts = opts || {};
+  if(!entries.length){ toast('没有解析到任何词条', 'warn'); return; }
+  var dupMap = {};
+  entries.forEach(function(e, i){
+    dupMap[i] = DB.words.some(function(w){
+      return w.en.toLowerCase() === String(e.en||'').trim().toLowerCase() && w.zh === String(e.zh||'').trim();
+    });
+  });
+  var dupN = Object.keys(dupMap).filter(function(k){ return dupMap[k]; }).length;
+  var rootN = 0;
+  entries.forEach(function(e){ rootN += (e.roots||[]).length; });
+  openModal(
+    '<h3>解析结果：共 '+entries.length+' 条</h3>' +
+    '<p class="sub">'+(dupN? dupN+' 条已存在于词库（只补充分组与词根，不重复添加）。' : '全部为新词条。')+
+    ' 识别到 '+rootN+' 个词根标签。确认后写入词库。</p>' +
+    entryPreviewHTML(entries, dupMap) +
+    '<div class="row" style="justify-content:flex-end"><button class="ghost" data-x="no">取消</button>' +
+    '<button class="btn" data-x="yes">确认导入 '+entries.length+' 条</button></div>',
+    function(m){
+      $('[data-x=no]', m).onclick = closeModal;
+      $('[data-x=yes]', m).onclick = function(){
+        var extra = opts.forceGroups || [];
+        var finalList = entries.map(function(e){
+          var gn = (e.groupNames||[]).slice();
+          extra.forEach(function(gid){
+            var g = groupById(gid);
+            if(g && gn.indexOf(g.name) < 0) gn.push(g.name);
+          });
+          return { en:e.en, zh:e.zh, roots:e.roots, notes:e.notes, groupNames:gn };
+        });
+        var r = addEntries(finalList);
+        closeModal();
+        ui.addText = '';
+        if(ui.view === 'add') ui.view = 'words';
+        render();
+        toast('已添加 '+r.added+' 条'+(r.skipped? '，跳过/合并 '+r.skipped+' 条':''), 'ok');
+      };
+    });
+}
+function importJSONText(text){
+  var data;
+  try{ data = JSON.parse(text); }
+  catch(e){ toast('JSON 解析失败：'+e.message, 'bad'); return; }
+  var incoming = normalizeDB(Array.isArray(data)? { words:data, groups:[] } : data);
+  if(!incoming.words.length && !incoming.groups.length){ toast('文件里没有可用词条', 'warn'); return; }
+  var entries = incoming.words.map(function(w){
+    var gn = w.groupIds.map(function(id){
+      var g = incoming.groups.filter(function(x){ return x.id === id; })[0];
+      return g? g.name : '';
+    }).filter(Boolean);
+    return { en:w.en, zh:w.zh, roots:w.roots, notes:w.notes, groupNames:gn };
+  });
+  previewImport(entries, {});
+}
+function doExport(){
+  var data = JSON.stringify({ version:1, exportedAt:new Date().toISOString(), groups:DB.groups, words:DB.words }, null, 2);
+  download('英语词库_'+stamp()+'.json', data, 'application/json');
+  toast('已导出 '+DB.words.length+' 条词', 'ok');
+}
+function exportCSV(){
+  var rows = [['en','zh','root','notes','groups','mastery']];
+  DB.words.forEach(function(w){
+    rows.push([w.en, w.zh, rootsOf(w).map(rootLabel).join('; '), w.notes,
+               groupsOf(w).map(function(g){ return g.name; }).join('、'), w.mastery]);
+  });
+  var csv = rows.map(function(r){
+    return r.map(function(v){
+      var s = String(v==null?'':v);
+      return /[",\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;
+    }).join(',');
+  }).join('\r\n');
+  download('英语词库_'+stamp()+'.csv', '\uFEFF'+csv, 'text/csv');
+  toast('已导出 CSV', 'ok');
+}
+function stamp(){
+  var d = new Date(), p = function(n){ return (n<10?'0':'')+n; };
+  return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes());
+}
+function download(name, text, mime){
+  try{
+    var blob = new Blob([text], {type:(mime||'text/plain')+';charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }catch(e){ toast('导出失败：'+e.message, 'bad'); }
+}
+function readFile(file, cb){
+  var fr = new FileReader();
+  fr.onload = function(){ cb(String(fr.result)); };
+  fr.onerror = function(){ toast('读取文件失败', 'bad'); };
+  fr.readAsText(file, 'utf-8');
+}
+function handleImportText(text, fileName){
+  var t = String(text||'').trim();
+  if(looksJSON(t)){ importJSONText(t); return; }
+  var first = t.split(/\r?\n/)[0] || '';
+  var isCSV = /\.csv$/i.test(fileName||'') || /^"?(en|pt|word|英语|葡语)"?\s*,/i.test(first);
+  var entries = isCSV? parseCSV(t) : parseLines(t);
+  if(!entries.length) entries = parseLines(t);
+  previewImport(entries, {});
+}
+
+/* 示例数据（仅在用户主动点击时载入，绝不自动预装） */
+function loadDemo(){
+  ensureGroup('医学'); ensureGroup('药学'); ensureGroup('日常');
+  addEntries([
+    { en:'carditis', zh:'心肌炎', roots:['cardi-','-itis'], groupNames:['医学'] },
+    { en:'cardiology', zh:'心脏病学', roots:['cardio-','-logy'], groupNames:['医学'] },
+    { en:'gastritis', zh:'胃炎', roots:['gastr-','-itis'], groupNames:['医学'] },
+    { en:'hepatitis', zh:'肝炎', roots:['hepat-','-itis'], groupNames:['医学'] },
+    { en:'nephritis', zh:'肾炎', roots:['nephr-','-itis'], groupNames:['医学'] },
+    { en:'neurology', zh:'神经病学', roots:['neur-','-logy'], groupNames:['医学'] },
+    { en:'dermatitis', zh:'皮炎', roots:['dermat-','-itis'], groupNames:['医学'] },
+    { en:'arthritis', zh:'关节炎', roots:['arthr-','-itis'], groupNames:['医学'] },
+    { en:'osteoporosis', zh:'骨质疏松症', roots:['osteo-','-osis'], groupNames:['医学'] },
+    { en:'hypertension', zh:'高血压', roots:['hyper-','tens-'], notes:'high blood pressure', groupNames:['医学'] },
+    { en:'tachycardia', zh:'心动过速', roots:['tachy-','cardi-'], groupNames:['医学'] },
+    { en:'bradycardia', zh:'心动过缓', roots:['brady-','cardi-'], groupNames:['医学'] },
+    { en:'anemia', zh:'贫血', roots:['an-','-emia'], groupNames:['医学'] },
+    { en:'leukemia', zh:'白血病', roots:['leuk-','-emia'], groupNames:['医学'] },
+    { en:'endoscopy', zh:'内窥镜检查', roots:['endo-','-scopy'], groupNames:['医学'] },
+    { en:'amoxicillin', zh:'阿莫西林（抗生素）', roots:['-cillin'], groupNames:['药学'] },
+    { en:'omeprazole', zh:'奥美拉唑（抑酸药）', roots:['-prazole'], groupNames:['药学'] },
+    { en:'atorvastatin', zh:'阿托伐他汀（降脂药）', roots:['-statin'], groupNames:['药学'] },
+    { en:'metformin', zh:'二甲双胍（降糖药）', roots:['-formin'], groupNames:['药学'] },
+    { en:'antibiotic', zh:'抗生素', roots:['anti-'], groupNames:['药学'] },
+    { en:'contraindication', zh:'禁忌症', roots:['contra-'], groupNames:['药学'] },
+    { en:'pharmacokinetics', zh:'药代动力学', roots:['pharmaco-','kine-'], groupNames:['药学'] },
+    { en:'broken', zh:'破碎的；坏掉的', groupNames:['日常'] },
+    { en:'borrow', zh:'借入', notes:'borrow sth from sb', groupNames:['日常'] },
+    { en:'deadline', zh:'截止期限', groupNames:['日常'] }
+  ]);
+  save();
+}
+
+/* =========================================================================
+   18. 启动
+   ========================================================================= */
+render();
+// 调试 / 二次开发入口：暴露内部数据结构与纯函数，方便在控制台里检查或写自动化测试
+window.__PT = {
+  get DB(){ return DB; }, save: save, parseLines: parseLines, parseCSV: parseCSV,
+  normalizeDB: normalizeDB, filterWords: filterWords, addEntries: addEntries, ensureGroup: ensureGroup,
+  render: render, ui: ui, isDue: isDue, dueInterval: dueInterval, buildQuestion: buildQuestion,
+  beginQuiz: beginQuiz, startQuiz: startQuiz,
+  blankDB: blankDB, roots: ROOTS, rootMatches: rootMatches, rootKey: rootKey, rootLabel: rootLabel,
+  normalizeRoots: normalizeRoots, rootInfo: rootInfo, canonicalRoot: canonicalRoot,
+  rootVariants: rootVariants, rootSpellings: rootSpellings, rootAlias: ROOT_ALIAS,
+  allRoots: allRoots, sharesRoot: sharesRoot, customRoots: customRootsList,
+  rootsOf: rootsOf, rootText: rootText,
+  saveCustomRoot: saveCustomRoot, deleteCustomRoot: deleteCustomRoot, rebuildRootRegistry: rebuildRootRegistry,
+  selectedIds: selectedIds, visibleIds: visibleIds,
+  parseError: null
+};
+})();
+</script>
+</body>
+</html>
